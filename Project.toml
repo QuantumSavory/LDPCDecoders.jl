@@ -3,6 +3,9 @@ uuid = "3c486d74-64b9-4c60-8b1a-13a564e77efb"
 authors = ["Krishna Praneet Gudipaty"]
 version = "1.0.0-DEV"
 
+[deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+
 [compat]
 julia = "1"
 
