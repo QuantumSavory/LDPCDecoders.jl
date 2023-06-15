@@ -1,7 +1,7 @@
 using LinearAlgebra
 include("util.jl")
 
-function hamming_parity(rank)
+function hamming_to_parity(rank)
     num_rows = 2^rank - 1
 
     parity = zeros(Int, num_rows, rank)
@@ -17,7 +17,7 @@ function hamming_parity(rank)
     return transpose(parity)
 end
 
-function repetition_parity(distance)
+function repetition_to_parity(distance)
     parity = zeros(distance - 1, distance)
 
     for i in range(1, distance - 1)
