@@ -3,30 +3,46 @@ using Test
 
 @testset "LDPC.jl" begin
     
+    ## Syndrome decoding tests
     error_rate = 0.1
     
-    parity_check_matrix = [1 0 1 0 1 0 1; 0 1 1 0 0 1 1; 0 0 0 1 1 1 1]
-    actual_message = [1 1 1 1 1 1 1]
-    received_message = [1 1 1 1 1 0 1]  # 2nd bit from right is an error
-    decoded_message, success = bp_decode(parity_check_matrix, received_message, error_rate)
-    
-    actual_message = vec(actual_message)
-    @test decoded_message == actual_message
+    pcm = [1 0 1 0 1 0 1; 0 1 1 0 0 1 1; 0 0 0 1 1 1 1]
+    error = [0 0 0 0 0 1 0]
+    syn = (pcm * error') .% 2
+    decoded_error, success = syndrome_decode(pcm, syn, error_rate, 100)
+    decoded_error_it, success = syndrome_it_decode(pcm, syn, 100)
+    @test decoded_error == vec(error)
+    @test decoded_error_it == vec(error)
 
-    parity_check_matrix = [1 0 1 1 1 0 0; 1 1 0 1 0 1 0; 1 1 1 0 0 0 1]
-    actual_message = [1 0 0 0 1 1 1]
-    received_message = [1 0 0 1 1 1 1] # 4th bit from left is an error
-    decoded_message, success = bp_decode(parity_check_matrix, received_message, error_rate)
+    pcm = [1 0 1 1 1 0 0; 1 1 0 1 0 1 0; 1 1 1 0 0 0 1]
+    error = [0 0 0 1 0 0 0]
+    syn = (pcm * error') .% 2
+    decoded_error, success = syndrome_decode(pcm, syn, error_rate, 100)
+    decoded_error_it, success = syndrome_it_decode(pcm, syn, 100)
+    @test decoded_error == vec(error)
+    @test decoded_error_it == vec(error)
     
-    actual_message = vec(actual_message)
-    @test decoded_message == actual_message
+    pcm = [1 1 1 1 0 0 0 0 0 0; 1 0 0 0 1 1 1 0 0 0; 0 1 0 0 1 0 0 1 1 0; 0 0 1 0 0 1 0 1 0 1; 0 0 0 1 0 0 1 0 1 1]
+    error = [0 0 0 0 0 0 0 0 0 1] # last bit is an error
+    syn = (pcm * error') .% 2
+    decoded_error, success = syndrome_decode(pcm, syn, error_rate, 100)
+    decoded_error_it, success = syndrome_it_decode(pcm, syn, 100)
+    @test decoded_error == vec(error)
+    @test decoded_error_it == vec(error)
     
-    parity_check_matrix = [1 1 1 1 0 0 0 0 0 0; 1 0 0 0 1 1 1 0 0 0; 0 1 0 0 1 0 0 1 1 0; 0 0 1 0 0 1 0 1 0 1; 0 0 0 1 0 0 1 0 1 1]
-    actual_message = [1 1 0 0 1 0 0 0 0 0]
-    received_message = [1 1 0 0 1 0 0 0 0 1] # last bit is an error
-    decoded_message, success = bp_decode(parity_check_matrix, received_message, error_rate)
-    
-    actual_message = vec(actual_message)
-    @test decoded_message == actual_message
+
+    ## Parity check matrix generation tests
+    wr = 10
+    wc = 9
+    n = 1000
+    H = parity_check_matrix(n, wr, wc)
+    rsums = sum(H, dims=2)
+    csums = sum(H, dims=1)
+
+    @test rsums[1] == wr
+    @test csums[1] == wc
+    @test all(rsums[1] .== rsums)
+    @test all(csums[1] .== csums)
+        
 
 end
