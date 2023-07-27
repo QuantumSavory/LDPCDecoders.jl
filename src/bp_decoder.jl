@@ -62,6 +62,17 @@ function send_check_message!(parity_check_matrix, message_c2v, message_v2c, num_
   end
 end
 
+function initialise_checks!(pcm, message_c2v, syndrome, num_vs, num_cs)
+  for check in 1:num_cs
+    msg = syndrome[check]
+    for variable in 1:num_vs
+      if pcm[check, variable] == 1
+        message_c2v = msg 
+      end
+    end
+  end
+end
+
 
 # Belief Propagation Decoder
 function bp_decode(parity_check_matrix, received_message, error_rate, max_iterations=100)
@@ -72,9 +83,11 @@ function bp_decode(parity_check_matrix, received_message, error_rate, max_iterat
   num_cs, num_vs = size(parity_check_matrix)
   
   # Initialize messages
-  message_c2v = zeros(num_checks, num_bits)
   message_v2c = zeros(num_checks, num_bits)
 
+  # Initialize check messages
+  message_c2v = zeros(num_checks, num_bits)
+  initialise_checks!(parity_check_matrix, message_c2v, syndrome, num_vs, num_cs)
 
   # Intialize llr for variable nodes
   vllr = llr.(received_message, error_rate)  
