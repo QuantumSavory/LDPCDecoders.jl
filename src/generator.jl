@@ -24,7 +24,7 @@ function gaussjordan(X)
     pivot_old = 0
     for j in 1:n
         filter_down = X[pivot_old+1:m, j]
-        pivot = argmax(filter_down) + pivot_old + 1
+        pivot = argmax(filter_down) + pivot_old
         println("Argmax ", argmax(filter_down))
         
 
