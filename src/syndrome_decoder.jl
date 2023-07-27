@@ -86,7 +86,7 @@ function syndrome_decode(pcm, syndrome, error_rate, max_iters)
       return error, converged
     end
   end
-  return Int.(error), converged
-
+  
+  return Bool.(error), converged
 
 end
