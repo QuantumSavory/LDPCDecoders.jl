@@ -1,4 +1,5 @@
 using Random
+using DelimitedFiles
 
 """
 parity_check_matrix(n, wr, wc)
@@ -43,4 +44,13 @@ function parity_check_matrix(n::Int, wr::Int, wc::Int)
   end
 
   return H
+end
+
+function save_pcm(H, file_path)
+  writedlm(file_path, Int.(H))
+end
+
+function load_pcm(file_path)
+  H = readdlm(file_path)
+  return Int.(H)
 end

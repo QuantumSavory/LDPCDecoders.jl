@@ -1,7 +1,7 @@
-using LDPC
+using LDPCDecoders
 using Test
 
-@testset "LDPC.jl" begin
+@testset "LDPCDecoders.jl" begin
     
     ## Syndrome decoding tests
     error_rate = 0.1

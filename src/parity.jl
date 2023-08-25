@@ -1,5 +1,4 @@
 using LinearAlgebra
-include("util.jl")
 
 function hamming_to_parity(rank)
     num_rows = 2^rank - 1
