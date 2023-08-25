@@ -1,6 +1,5 @@
 using LinearAlgebra
 using RowEchelon
-include("util.jl")
 
 # function parity_to_generator(H::Matrix{Int})
 #     rank, n = size(H)
