@@ -1,22 +1,11 @@
 using SparseArrays
 
-function syndrome_decode(pcm, pcmT, syndrome, error_rate, max_iters, channel_probs, b2c, c2b, log_probabs, error)
+function syndrome_decode(pcm, pcmT, syndrome, max_iters, channel_probs, b2c, c2b, log_probabs, error)
   
   # Get size of Parity check matrix
   m, n = size(pcm)
   rows = rowvals(pcm)
   rowsT = rowvals(pcmT)
-
-  # Initialise channel probabilities
-  # channel_probs = fill(error_rate, n)
-  
-  # Initialise messages between checks, bits array
-  # 3rd dimension: 1 -> bit to check, 2-> check to bit
-  # msg = zeros(m, n, 2)
-  
-
-  # Initialize log probabilities
-  # log_probabs = zeros(n)
 
   # Initiliase bit to check messages
   for j in 1:n
@@ -29,7 +18,6 @@ function syndrome_decode(pcm, pcmT, syndrome, error_rate, max_iters, channel_pro
     end
   end
 
-  error = zeros(Bool,n)
   converged = 0
   for iter in 1:max_iters
 

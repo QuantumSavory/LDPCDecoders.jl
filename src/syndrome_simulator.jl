@@ -11,9 +11,17 @@ function syndrome_simulate(parity_check_matrix, physical_error_rate, max_trials)
   parity_check_matrix_T = sparse(parity_check_matrix')
 
   suc = 0
-  # logical_error_rates = []
+  
   @info "Simulating for $physical_error_rate for $max_trials trials"
   tenths = floor(max_trials/10)
+  
+  # Initalization
+  log_probabs = zeros(num_bits)
+  channel_probabs = fill(physical_error_rate, num_bits)
+  b2c = zeros(num_checks, num_bits)
+  c2b = zeros(num_checks, num_bits)
+  err = zeros(num_bits)
+  
   for i in 1:max_trials
    
     # Generate error based on error rate
@@ -21,20 +29,8 @@ function syndrome_simulate(parity_check_matrix, physical_error_rate, max_trials)
   
     syndrome = (parity_check_matrix * error) .% 2
     
-    # Initalization
-    log_probabs = zeros(num_bits)
-    channel_probabs = fill(physical_error_rate, num_bits)
-    b2c = zeros(num_checks, num_bits)
-    c2b = zeros(num_checks, num_bits)
-    err = zeros(num_bits)
-
     # Belief propogation decoder
-    decoded_error, decoded = syndrome_decode(parity_check_matrix, parity_check_matrix_T, syndrome, physical_error_rate, 10, channel_probabs, b2c, c2b, log_probabs, err)
-    # decoded_error, decoded = syndrome_it_decode(parity_check_matrix, syndrome, 100)
-
-    # ler = sum(decoded_error .!= error) / num_bits
-    # logical_error_rates = [logical_error_rates; ler]
-
+    decoded_error, decoded = syndrome_decode(parity_check_matrix, parity_check_matrix_T, syndrome, 10, copy(channel_probabs), copy(b2c), copy(c2b), copy(log_probabs), copy(err))
     
     if decoded == true
       suc += 1

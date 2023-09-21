@@ -12,6 +12,13 @@ function syndrome_it_simulate(parity_check_matrix, physical_error_rate, max_tria
   logical_error_rates = []
   @info "Simulating for $physical_error_rate for $max_trials trials"
   tenths = floor(max_trials/10)
+
+  # Initalization
+  err = zeros(Bool, num_bits)
+  votes = zeros(Int, num_bits)
+  curr_syn = zeros(Bool, num_checks)
+  error_checks = zeros(Bool, num_checks)
+
   for i in 1:max_trials
    
     # Generate error 
@@ -19,15 +26,9 @@ function syndrome_it_simulate(parity_check_matrix, physical_error_rate, max_tria
   
     # Calculate syndrome
     syndrome = (parity_check_matrix * error) .% 2
-    
-    # Initalization
-    err = zeros(Bool, num_bits)
-    votes = zeros(Int, num_bits)
-    curr_syn = zeros(Bool, num_checks)
-    error_checks = zeros(Bool, num_checks)
 
     # Iterative bit flip decoder
-    decoded_error, decoded = syndrome_it_decode(parity_check_matrix, syndrome, 100, err, votes)
+    decoded_error, decoded = syndrome_it_decode(parity_check_matrix, syndrome, 100, copy(err), copy(votes))
     
     if decoded == true
       suc += 1
