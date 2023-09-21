@@ -27,6 +27,8 @@ jobs:
           - x64
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+      - run: pip install -r requirements.txt
       - uses: julia-actions/setup-julia@v1
         with:
           version: ${{ matrix.version }}
