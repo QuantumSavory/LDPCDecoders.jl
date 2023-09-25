@@ -15,8 +15,6 @@ export it_decode
 include("it_decoder.jl")
 export parity_check_matrix, save_pcm, load_pcm
 include("parity_generator.jl")
-export gaussjordan
-include("generator.jl")
 export syndrome_decode
 include("syndrome_decoder.jl")
 export syndrome_simulate
