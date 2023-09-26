@@ -15,6 +15,7 @@ SuiteSparseGraphBLAS = "c2e53296-7b14-11e9-1210-bddfa8111e1d"
 
 [compat]
 DelimitedFiles = "1"
+PyPlot = "2"
 RowEchelon = "0.2"
 julia = "1.9"
 
