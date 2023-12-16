@@ -1,7 +1,5 @@
-using SparseArrays
-
 function syndrome_decode(pcm, pcmT, syndrome, max_iters, channel_probs, b2c, c2b, log_probabs, error)
-  
+
   # Get size of Parity check matrix
   m, n = size(pcm)
   rows = rowvals(pcm)
@@ -71,7 +69,7 @@ function syndrome_decode(pcm, pcmT, syndrome, max_iters, channel_probs, b2c, c2b
       log_probabs[j] = log(1 / temp)
       if temp >= 1
         error[j] = 1
-      else 
+      else
         error[j] = 0
       end
 
@@ -96,7 +94,7 @@ function syndrome_decode(pcm, pcmT, syndrome, max_iters, channel_probs, b2c, c2b
       return error, converged
     end
   end
-  
+
   return Bool.(error), converged
 
 end

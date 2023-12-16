@@ -1,6 +1,3 @@
-using LinearAlgebra
-using Random
-
 function bp_simulate(parity_check_matrix, generator_matrix, error_rate, max_trials)
 
   # Get size of parity check matrix
@@ -12,7 +9,7 @@ function bp_simulate(parity_check_matrix, generator_matrix, error_rate, max_tria
   success = 0
   for i in 1:max_trials
     println("******************* Iteration number : ", i)
-   
+
     # Generate error based on error rate
     message = bitrand(message_size)
     println("message = ", message)
@@ -30,12 +27,12 @@ function bp_simulate(parity_check_matrix, generator_matrix, error_rate, max_tria
       else
         error[j] = 0
       end
-    end 
-    
-    
+    end
+
+
     error = Int.(error)
     println("error = ", error)
-    received_message = vec(code) .⊻ error 
+    received_message = vec(code) .⊻ error
     println("received message2 = ", received_message)
     display(received_message)
 
@@ -60,13 +57,12 @@ function bp_simulate(parity_check_matrix, generator_matrix, error_rate, max_tria
     # if correct
     #   success += 1
     # end
-        
 
-    
+
+
   end
   println("The success rate of the decoder is ")
   println(success/max_trials)
 
 
 end
-

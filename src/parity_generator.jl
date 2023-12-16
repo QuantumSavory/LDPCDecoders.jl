@@ -1,6 +1,3 @@
-using Random
-using DelimitedFiles
-
 """
 parity_check_matrix(n, wr, wc)
 
@@ -21,16 +18,16 @@ julia> H = parity_check_matrix(1000, 10, 9)
 ```
 """
 function parity_check_matrix(n::Int, wr::Int, wc::Int)
-  
+
   # For a regular LDPC matrix
   ## wr = wc * (n / n-k)
   @assert n % wr == 0
-  
+
   n_equations = (n  * wc) ÷ wr
   block_size = n_equations ÷ wc
 
   block = zeros(Bool, block_size, n)
-  
+
   for i in 1:block_size
     for j in ((i-1)*wr + 1):((i)*wr)
       block[i,j] = 1
@@ -40,7 +37,7 @@ function parity_check_matrix(n::Int, wr::Int, wc::Int)
   H = block
 
   for i in 1:wc - 1
-    H = [H; block[:, shuffle(1:end)]] 
+    H = [H; block[:, shuffle(1:end)]]
   end
 
   return H

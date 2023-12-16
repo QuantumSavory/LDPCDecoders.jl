@@ -1,9 +1,10 @@
 using DelimitedFiles
 using PyPlot
+using LDPCDecoders
 
 function simulate_bp(parity_check_matrix, physical_error_rates,  max_trials, output_file_path)
   outputs = []
-  
+
   for per in physical_error_rates
     @info "Simulation for per: $per"
     ler = syndrome_simulate(parity_check_matrix, per, max_trials)
@@ -16,7 +17,7 @@ function simulate_bp(parity_check_matrix, physical_error_rates,  max_trials, out
 end
 
 function plot_per_vs_ler(file_path)
-  
+
   # Read data from file
   data = readdlm(file_path)
 
