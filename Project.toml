@@ -1,12 +1,11 @@
 name = "LDPCDecoders"
 uuid = "3c486d74-64b9-4c60-8b1a-13a564e77efb"
 authors = ["Krishna Praneet Gudipaty"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 RowEchelon = "af85af4c-bcd5-5d23-b03a-a909639aa875"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
@@ -15,14 +14,7 @@ SuiteSparseGraphBLAS = "c2e53296-7b14-11e9-1210-bddfa8111e1d"
 
 [compat]
 DelimitedFiles = "1"
-PyPlot = "2"
 RowEchelon = "0.2"
 Statistics = "1"
 SuiteSparseGraphBLAS = "0.10"
 julia = "1.9"
-
-[extras]
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-
-[targets]
-test = ["Test"]

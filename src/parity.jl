@@ -1,5 +1,3 @@
-using LinearAlgebra
-
 function hamming_to_parity(rank)
     num_rows = 2^rank - 1
 
@@ -21,7 +19,7 @@ function repetition_to_parity(distance)
 
     for i in range(1, distance - 1)
         parity[i, i] = 1
-        parity[i, i + 1] = 1 
+        parity[i, i + 1] = 1
     end
 
     return parity

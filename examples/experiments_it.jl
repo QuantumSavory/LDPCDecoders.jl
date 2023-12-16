@@ -1,9 +1,10 @@
 using DelimitedFiles
 using PyPlot
+using LDPCDecoders
 
 function simulate_it(parity_check_matrix, physical_error_rates, max_trials, output_file_path)
   outputs = []
-  
+
   for per in physical_error_rates
     @info "Simulation for per: $per"
     ler = syndrome_it_simulate(parity_check_matrix, per, max_trials)

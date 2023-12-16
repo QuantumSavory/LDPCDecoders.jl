@@ -1,5 +1,14 @@
 module LDPCDecoders
 
+using DelimitedFiles
+using LinearAlgebra
+using Random
+using SparseArrays
+using Statistics
+
+using RowEchelon
+
+
 # Write your package code here.
 export parity_to_generator
 include("generator.jl")
@@ -21,10 +30,6 @@ export syndrome_simulate
 include("syndrome_simulator.jl")
 export syndrome_it_decode
 include("syndrome_it_decoder.jl")
-export simulate_bp, plot_per_vs_ler
-include("experiments.jl")
 export syndrome_it_simulate
 include("syndrome_it_simulate.jl")
-export simulate_it
-include("experiments_it.jl")
 end

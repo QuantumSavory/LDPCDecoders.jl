@@ -1,6 +1,3 @@
-using LinearAlgebra
-using RowEchelon
-
 # function parity_to_generator(H::Matrix{Int})
 #     rank, n = size(H)
 #     n = size(H, 2)
@@ -19,21 +16,21 @@ function gaussjordan(X)
 
     m, n = size(X)
     P = Matrix(I, m, m)
-    
+
     pivot_old = 0
     for j in 1:n
         filter_down = X[pivot_old+1:m, j]
         pivot = argmax(filter_down) + pivot_old
         println("Argmax ", argmax(filter_down))
-        
+
 
         if pivot <= m && X[pivot, j] == 1
             pivot_old += 1
             if pivot_old != pivot
                 aux = X[pivot, :]
                 X[pivot, :] = X[pivot_old, :]
-                X[pivot_old, :] = aux 
-                
+                X[pivot_old, :] = aux
+
                 temp = P[pivot_old, :]
                 P[pivot, :] = P[pivot_old, :]
                 P[pivot_old, :] = temp
@@ -46,7 +43,7 @@ function gaussjordan(X)
                 end
             end
         end
-        
+
         if pivot_old == m
             break
         end
