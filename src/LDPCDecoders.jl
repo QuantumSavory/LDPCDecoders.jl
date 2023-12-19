@@ -6,6 +6,7 @@ using Random
 using SparseArrays
 using Statistics
 
+using QuantumClifford
 using RowEchelon
 
 
@@ -32,4 +33,6 @@ export syndrome_it_decode
 include("syndrome_it_decoder.jl")
 export syndrome_it_simulate
 include("syndrome_it_simulate.jl")
+export evaluate_decoder
+include("decoder_pipeline.jl")
 end
