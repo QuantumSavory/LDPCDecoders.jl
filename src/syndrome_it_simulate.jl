@@ -28,7 +28,7 @@ function syndrome_it_simulate(parity_check_matrix, physical_error_rate, max_tria
     syndrome = (parity_check_matrix * error) .% 2
 
     # Iterative bit flip decoder
-    decoded_error, decoded = syndrome_it_decode(parity_check_matrix, syndrome, 100, copy(err), copy(votes))
+    decoded_error, decoded = syndrome_it_decode(parity_check_matrix, syndrome, 50, copy(err), copy(votes))
     
     if decoded == true
       suc += 1

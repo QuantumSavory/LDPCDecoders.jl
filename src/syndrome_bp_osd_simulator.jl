@@ -3,12 +3,12 @@ using Random
 using Statistics
 
 
-function syndrome_simulate(parity_check_matrix, physical_error_rate, max_trials)
+function syndrome_bp_osd_simulate(parity_check_matrix, physical_error_rate, max_trials)
 
   # Get size of parity check matrix
   num_checks, num_bits = size(parity_check_matrix)
   
-  parity_check_matrix_T = sparse(parity_check_matrix')
+  parity_check_matrix_T = parity_check_matrix'
 
   suc = 0
   
@@ -45,7 +45,7 @@ function syndrome_simulate(parity_check_matrix, physical_error_rate, max_trials)
     end
     
     # Belief propogation decoder
-    decoded_error, decoded = syndrome_decode(parity_check_matrix, parity_check_matrix_T, syndrome, 10, channel_probabs, b2c, c2b, log_probabs, err)
+    decoded_error, decoded = bp_osd0_decode(parity_check_matrix, parity_check_matrix_T, syndrome, 10, channel_probabs, b2c, c2b, log_probabs, err)
     
     if decoded == true
       suc += 1

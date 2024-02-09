@@ -27,4 +27,7 @@ export syndrome_it_simulate
 include("syndrome_it_simulate.jl")
 export simulate_it
 include("experiments_it.jl")
+# include("syndrome_bp_decoder_test.jl")
+export simulate_bp_osd
+include("experiments_bp_osd.jl")
 end
