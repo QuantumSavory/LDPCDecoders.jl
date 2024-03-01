@@ -10,26 +10,23 @@ using RowEchelon
 
 
 # Write your package code here.
-export parity_to_generator
+export
+    parity_to_generator, hamming_to_parity, repetition_to_parity, 
+    bp_decode, bp_simulate, it_decode, parity_check_matrix, save_pcm, 
+    load_pcm, syndrome_decode, syndrome_simulate, syndrome_it_decode, 
+    syndrome_it_simulate, syndrome_decode!, decode!, BeliefPropagationSetup, 
+    BeliefPropagationDecoder, BeliefPropagationDecoderSparse, batchdecode!
+
 include("generator.jl")
-export hamming_to_parity
 include("util.jl")
-export repetition_to_parity
 include("parity.jl")
-export bp_decode
 include("bp_decoder.jl")
-export bp_simulate
 include("bp_simulator.jl")
-export it_decode
 include("it_decoder.jl")
-export parity_check_matrix, save_pcm, load_pcm
 include("parity_generator.jl")
-export syndrome_decode
 include("syndrome_decoder.jl")
-export syndrome_simulate
 include("syndrome_simulator.jl")
-export syndrome_it_decode
 include("syndrome_it_decoder.jl")
-export syndrome_it_simulate
 include("syndrome_it_simulate.jl")
+include("decoders/belief_propogation.jl")
 end

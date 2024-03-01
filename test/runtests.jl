@@ -12,7 +12,6 @@ using SparseArrays
     num_checks = 3
     error = [0 0 0 0 0 1 0]
     syn = (pcm * error') .% 2
-    display(syn)
     
     args = (sparse(pcm), sparse(pcm'), syn, 10, fill(error_rate, num_bits), zeros(num_checks, num_bits), zeros(num_checks, num_bits), zeros(num_bits), zeros(num_bits))
     decoded_error, success = syndrome_decode(args...)
@@ -58,3 +57,5 @@ using SparseArrays
         
 
 end
+
+include("test_bp_decoder.jl")
