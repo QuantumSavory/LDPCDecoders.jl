@@ -102,7 +102,7 @@ end
 
 # In-place variant
 # TODO: Currently very slow. Need to improve this
-function syndrome_decode!(decoder::BeliefPropagationDecoderSparse, setup::BeliefPropagationSetup, syndrome::BitArray{1})
+function syndrome_decode!(decoder::BeliefPropagationDecoder, setup::BeliefPropagationSetup, syndrome::BitArray{1})
   
   # Get size of Parity check matrix
   m, n = size(decoder.sparse_H)

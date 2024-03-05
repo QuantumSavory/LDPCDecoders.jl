@@ -2,6 +2,8 @@ using LDPCDecoders
 using Test
 using SparseArrays
 
+include("../src/syndrome_decoder.jl")
+
 @testset "LDPCDecoders.jl" begin
 
     ## Syndrome decoding tests

@@ -8,7 +8,7 @@ A package of LDPC decoders for decoding certain LDPC Quantum Error Correcting Co
 
 To use decoders and structs from LDPCDecoders.jl in your project, add it to your `Project.toml`, and automatically to `Manifest.toml`
 
-Inside your project folder (which contains the `Project.toml` and `Manifest.toml`), run julia in package mode (enabled by pressing `]` in Julia REPL)
+Inside your project folder (which contains the `Project.toml` and `Manifest.toml`), run Julia in package mode (enabled by pressing `]` in Julia REPL)
 
 ```bash
 pkg> activate .
@@ -19,14 +19,14 @@ When prompted, press `Y/y` for yes.
 
 # Usage
 
-Using each of the decodersis discussed below
+Using each of the decoders is discussed below
 
 ## Belief Propagation
-The code and user interface for belied propagation decoder lies in `src/decoders/belief_propagation.jl`. First step is to set up the decoder, with your parity check matrix `H`, physical error rate `per` and max number of decoding iterations for belied propagation algorithm. 
+The code and user interface for the belief propagation decoder lies in `src/decoders/belief_propagation.jl`. First step is to set up the decoder, with your parity check matrix `H`, physical error rate `per` and max number of decoding iterations for belief propagation algorithm. 
 
 ```julia
 julia> using LDPCDecoders
-julia> decoder = BeliefPropagationDeocder(H, per, max_iters)
+julia> decoder = BeliefPropagationDecoder(H, per, max_iters)
 ```
 
 There are two available methods for decoding - `decode!` which takes a syndrome and `batchdecode!`, which takes a batch of syndromes at once. See code for more docs.

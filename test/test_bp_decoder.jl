@@ -1,6 +1,7 @@
 @testset "test_bp_decoder.jl" begin
   
-  """Test for belief propagation decoder""" function test_bp_decoder()
+  """Test for belief propagation decoder""" 
+  function test_bp_decoder()
     H::BitArray{2} = parity_check_matrix(1000, 10, 9)
     per = 0.01
     err::BitArray{1} = rand(1000) .< per 
@@ -33,9 +34,9 @@
 
     @info "Batch decode logical error rate: $(ler)"
     
-    return true
+    return ler
   end
 
   @test test_bp_decoder()
-  @test test_bp_decoder_batch()
+  @test test_bp_decoder_batch() < 0.9
 end
