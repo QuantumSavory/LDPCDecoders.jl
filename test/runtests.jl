@@ -46,7 +46,7 @@ include("../src/syndrome_decoder.jl")
     wr = 10
     wc = 9
     n = 1000
-    H = parity_check_matrix(n, wr, wc)
+    H = LDPCDecoders.parity_check_matrix(n, wr, wc)
     rsums = sum(H, dims=2)
     csums = sum(H, dims=1)
 
@@ -61,3 +61,4 @@ include("../src/syndrome_decoder.jl")
 end
 
 include("test_bp_decoder.jl")
+include("test_doctests.jl")

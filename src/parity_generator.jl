@@ -1,3 +1,4 @@
+using Random
 """
 parity_check_matrix(n, wr, wc)
 

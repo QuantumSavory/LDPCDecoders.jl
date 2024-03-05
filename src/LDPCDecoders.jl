@@ -10,8 +10,8 @@ using RowEchelon
 
 
 export
-    parity_check_matrix, decode!,
-    BeliefPropagationDecoder, batchdecode!
+    decode!, batchdecode!, 
+    BeliefPropagationDecoder
 
 include("generator.jl")
 include("util.jl")

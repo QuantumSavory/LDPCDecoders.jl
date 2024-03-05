@@ -1,6 +1,6 @@
 # LDPCDecoders.jl
 
-[![Build Status](https://github.com/krishna-praneet/LDPC.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/krishna-praneet/LDPC.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Build Status](https://github.com/QuantumSavory/LDPCDecoders.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/QuantumSavory/LDPCDecoders.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
 A package of LDPC decoders for decoding certain LDPC Quantum Error Correcting Codes using Julia. It currently has a simple iterative decoder and belief propagation (BP) decoder, which also has variation with post processing using Ordered Statistics Decoding (BP+OSD). 
 

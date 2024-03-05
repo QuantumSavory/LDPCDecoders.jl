@@ -1,5 +1,6 @@
 include("decoders/belief_propogation.jl")
 
+# TODO: Depricated, to be removed. Only new implementation is required. 
 function syndrome_decode(pcm, pcmT, syndrome, max_iters, channel_probs, b2c, c2b, log_probabs, error)
 
   # Get size of Parity check matrix
@@ -102,7 +103,7 @@ end
 
 # In-place variant
 # TODO: Currently very slow. Need to improve this
-function syndrome_decode!(decoder::BeliefPropagationDecoder, setup::BeliefPropagationSetup, syndrome::BitArray{1})
+function syndrome_decode!(decoder::BeliefPropagationDecoder, setup::BeliefPropagationScratchSpace, syndrome::BitArray{1})
   
   # Get size of Parity check matrix
   m, n = size(decoder.sparse_H)

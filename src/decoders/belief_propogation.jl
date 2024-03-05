@@ -2,7 +2,8 @@ using SparseArrays
 
 include("abstract_decoder.jl")
 
-struct BeliefPropagationSetup
+# TODO: Better nomenclature
+struct BeliefPropagationScratchSpace
   "Log probabilities"
   log_probabs::Vector{Float64}
   
@@ -55,15 +56,15 @@ Function to reset the scratch space for Belief propagation decoding
 
 # Examples
 ```jldoctest
-julia> per = 0.01; max_iters = 100;
-julia> H = parity_check_matrix(1000, 10, 9);
-julia> decoder = BeliefPropagationDecoder(H, per, max_iters);
-julia> setup = BeliefPropagationSetup(zeros(decoder.n), fill(decoder.per, decoder.n), zeros(decoder.s, decoder.n), zeros(decoder.s, decoder.n), zeros(decoder.n));
+julia> decoder = BeliefPropagationDecoder(LDPCDecoders.parity_check_matrix(1000, 10, 9), 0.01, 100);
 
-julia> reset!(setup, decoder); 
+julia> scratch = BeliefPropagationScratchSpace(zeros(decoder.n), fill(decoder.per, decoder.n), 
+                zeros(decoder.s, decoder.n), zeros(decoder.s, decoder.n), zeros(decoder.n));
+
+julia> reset!(scratch, decoder); 
 ````
 """
-function reset!(bp_setup::BeliefPropagationSetup, bp_decoder::BeliefPropagationDecoder)
+function reset!(bp_setup::BeliefPropagationScratchSpace, bp_decoder::BeliefPropagationDecoder)
   bp_setup.log_probabs .= 0.0
   bp_setup.channel_probs .= bp_decoder.per
   bp_setup.bit_2_check .= 0.0
@@ -82,23 +83,24 @@ Function to decode given the parity check matrix, syndrome and error
 * `errors`: Predefined error array that this function manipulates
 
 # Examples
-```jldoctest decodersetup
-julia> per = 0.01; max_iters = 100
-julia> H = parity_check_matrix(1000, 10, 9);
+```jldoctest
+julia> decoder = BeliefPropagationDecoder(LDPCDecoders.parity_check_matrix(1000, 10, 9), 0.01, 100);
 
-julia> decoder = BeliefPropagationDecoder(H, per, max_iters);
+julia> error = rand(1000) .< 0.01;
 
-julia> error = rand(1000) .< per;
 julia> syndrome::BitArray{1} = (H * error) .% 2;
+
 julia> decoded_error::BitArray{1} = zeros(1000);
 
 julia> decode!(decoder, syndrome, decoded_error)
 true
 ```
 """
+
 function decode!(decoder::BeliefPropagationDecoder, syndrome::BitArray{1}, error::BitArray{1})
 
-  setup = BeliefPropagationSetup(zeros(decoder.n), fill(decoder.per, decoder.n), zeros(decoder.s, decoder.n), zeros(decoder.s, decoder.n), zeros(decoder.n))
+  setup = BeliefPropagationScratchSpace(zeros(decoder.n), fill(decoder.per, decoder.n), 
+            zeros(decoder.s, decoder.n), zeros(decoder.s, decoder.n), zeros(decoder.n))
 
   reset!(setup, decoder)
   success = syndrome_decode!(decoder, setup, syndrome)
@@ -118,27 +120,27 @@ Scratch space allocations are done once and re-used for better performance
 * `errors`: Predefined error matrix that this function manipulates
 
 # Examples
-```jldoctest decodersetup
-julia> num_trials = 100
-100
-julia> errors::BitArray{2} = rand(Base.Float64, (num_trials,1000)) .< per;
+```jldoctest
+julia> decoder = BeliefPropagationDecoder(LDPCDecoders.parity_check_matrix(1000, 10, 9), 0.01, 100);
 
-julia> syndromes::BitArray{2} = zeros(num_trials, 900);
+julia> errors::BitArray{2} = rand(Base.Float64, (10,1000)) .< 0.01;
+
+julia> syndromes::BitArray{2} = zeros(10, 900);
 
 julia> for i in axes(errors, 1)
-             syn = (H * errors[i, :]) .% 2
-             syndromes[i, :] = syn
-           end    
+             syn = (H * errors[i, :]) .% 2;
+             syndromes[i, :] = syn;
+           end  
 
-julia> batchdecode!(decoder, syndromes, errors);
-```
+julia> batchdecode!(decoder, syndromes, errors) < 0.9
+true
 """
 function batchdecode!(decoder::BeliefPropagationDecoder, syndromes::BitArray{2}, errors::BitArray{2})
 
   @assert size(syndromes, 1) == size(errors, 1)
   num_trials::Int = size(syndromes, 1)
 
-  setup = BeliefPropagationSetup(zeros(decoder.n), fill(decoder.per, decoder.n), zeros(decoder.s, decoder.n), zeros(decoder.s, decoder.n), zeros(decoder.n))
+  setup = BeliefPropagationScratchSpace(zeros(decoder.n), fill(decoder.per, decoder.n), zeros(decoder.s, decoder.n), zeros(decoder.s, decoder.n), zeros(decoder.n))
 
   success::BitArray{1} = zeros(num_trials)
 
