@@ -1,3 +1,4 @@
+using Random
 """
 parity_check_matrix(n, wr, wc)
 
@@ -40,7 +41,7 @@ function parity_check_matrix(n::Int, wr::Int, wc::Int)
     H = [H; block[:, shuffle(1:end)]]
   end
 
-  return H
+  return BitArray(H)
 end
 
 function save_pcm(H, file_path)
