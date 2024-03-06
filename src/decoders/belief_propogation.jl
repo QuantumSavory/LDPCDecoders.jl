@@ -1,15 +1,12 @@
 using SparseArrays
 
-include("abstract_decoder.jl")
-
-# TODO: Better nomenclature
 struct BeliefPropagationScratchSpace
   "Log probabilities"
   log_probabs::Vector{Float64}
-  
+
   "Channel probabilities"
   channel_probs::Vector{Float64}
-  
+
   "Bit to check message matrix"
   bit_2_check::Matrix{Float64}
 
@@ -18,7 +15,11 @@ struct BeliefPropagationScratchSpace
 
   "predicted error for each bit"
   err::Vector{Float64}
-end 
+end
+
+function BeliefPropagationScratchSpace(n, s, per)
+  return BeliefPropagationScratchSpace(zeros(n), fill(per, n), zeros(s, n), zeros(s, n), zeros(n))
+end
 
 struct BeliefPropagationDecoder <: AbstractDecoder
   "Physical error rate"
@@ -26,25 +27,29 @@ struct BeliefPropagationDecoder <: AbstractDecoder
 
   "Number of max iterations of Belief propagation decoder"
   max_iters::Int
-  
+
   "Num of parity checks i.e. number of rows of parity check matrix"
   s::Int
-  
+
   "Num of bits in the code i.e number of columns of parity check matrix"
   n::Int
-  
+
   "Sparse form of the parity check matrix"
   sparse_H::SparseArrays.SparseMatrixCSC{Bool,Int}
-  
+
   "Sparse form of the transform of the parity check matrix"
   sparse_HT::SparseArrays.SparseMatrixCSC{Bool,Int}
+
+  "Scratch space for the decoder"
+  scratch::BeliefPropagationScratchSpace
 end
 
 function BeliefPropagationDecoder(H, per::Float64, max_iters::Int)
   s, n = size(H)
   sparse_H = sparse(H)
   sparse_HT = sparse(H')
-  return BeliefPropagationDecoder(per, max_iters, s, n, sparse_H, sparse_HT)
+  scratch = BeliefPropagationScratchSpace(n, s, per)
+  return BeliefPropagationDecoder(per, max_iters, s, n, sparse_H, sparse_HT, scratch)
 end
 
 """
@@ -58,21 +63,23 @@ Function to reset the scratch space for Belief propagation decoding
 ```jldoctest
 julia> decoder = BeliefPropagationDecoder(LDPCDecoders.parity_check_matrix(1000, 10, 9), 0.01, 100);
 
-julia> scratch = BeliefPropagationScratchSpace(zeros(decoder.n), fill(decoder.per, decoder.n), 
+julia> scratch = BeliefPropagationScratchSpace(zeros(decoder.n), fill(decoder.per, decoder.n),
                 zeros(decoder.s, decoder.n), zeros(decoder.s, decoder.n), zeros(decoder.n));
 
-julia> reset!(scratch, decoder); 
+julia> reset!(scratch, decoder);
 ````
 """
-function reset!(bp_setup::BeliefPropagationScratchSpace, bp_decoder::BeliefPropagationDecoder)
+function reset!(bp_decoder::BeliefPropagationDecoder)
+  bp_setup = bp_decoder.scratch
   bp_setup.log_probabs .= 0.0
   bp_setup.channel_probs .= bp_decoder.per
   bp_setup.bit_2_check .= 0.0
   bp_setup.check_2_bit .= 0.0
   bp_setup.err .= 0.0
+  bp_decoder
 end
 
-# TODO: Belief decoder type, syndrome, error -> should be modified 
+# TODO: Belief decoder type, syndrome, error -> should be modified
 
 """
 Function to decode given the parity check matrix, syndrome and error
@@ -84,30 +91,25 @@ Function to decode given the parity check matrix, syndrome and error
 
 # Examples
 ```jldoctest
-julia> decoder = BeliefPropagationDecoder(LDPCDecoders.parity_check_matrix(1000, 10, 9), 0.01, 100);
+julia> H = LDPCDecoders.parity_check_matrix(1000, 10, 9);
+
+julia> decoder = BeliefPropagationDecoder(H, 0.01, 100);
 
 julia> error = rand(1000) .< 0.01;
 
-julia> syndrome::BitArray{1} = (H * error) .% 2;
+julia> syndrome = (H * error) .% 2;
 
-julia> decoded_error::BitArray{1} = zeros(1000);
+julia> guess, success = decode!(decoder, syndrome, zeros(1000));
 
-julia> decode!(decoder, syndrome, decoded_error)
+julia> error == guess
 true
 ```
 """
-
-function decode!(decoder::BeliefPropagationDecoder, syndrome::BitArray{1}, error::BitArray{1})
-
-  setup = BeliefPropagationScratchSpace(zeros(decoder.n), fill(decoder.per, decoder.n), 
-            zeros(decoder.s, decoder.n), zeros(decoder.s, decoder.n), zeros(decoder.n))
-
-  reset!(setup, decoder)
-  success = syndrome_decode!(decoder, setup, syndrome)
-  copyto!(error, setup.err)
-  return success
+function decode!(decoder::BeliefPropagationDecoder, syndrome::AbstractVector, error::AbstractVector) # TODO check if casting to bitarrays helps with performance -- if it does, set up warnings to the user for cases where they have not done the casting
+  reset!(decoder)
+  success = syndrome_decode!(decoder, decoder.scratch, syndrome) # TODO: Delete syndrome_decode! and just move its content here. There is no point in this indirection.
+  return decoder.scratch.err, success
 end
-
 
 """
 Function to batch decode given the parity check matrix, syndrome and error
@@ -123,32 +125,28 @@ Scratch space allocations are done once and re-used for better performance
 ```jldoctest
 julia> decoder = BeliefPropagationDecoder(LDPCDecoders.parity_check_matrix(1000, 10, 9), 0.01, 100);
 
-julia> errors::BitArray{2} = rand(Base.Float64, (10,1000)) .< 0.01;
+julia> samples = 100
 
-julia> syndromes::BitArray{2} = zeros(10, 900);
+julia> errors = rand(1000,samples) .< 0.01;
 
-julia> for i in axes(errors, 1)
-             syn = (H * errors[i, :]) .% 2;
-             syndromes[i, :] = syn;
-           end  
+julia> syndromes = zeros(900, samples);
 
-julia> batchdecode!(decoder, syndromes, errors) < 0.9
-true
+julia> syndromes = H*errors .% 2
+
+julia> guesses, successes = batchdecode!(decoder, syndromes, zero(errors));
+
+julia> sum((guesses[:,i] == errors[:,i] for i in 1:samples)) > 0.995*samples
 """
-function batchdecode!(decoder::BeliefPropagationDecoder, syndromes::BitArray{2}, errors::BitArray{2})
+function batchdecode!(decoder::BeliefPropagationDecoder, syndromes, errors)
+  @assert size(syndromes, 2) == size(errors, 2)
+  num_trials::Int = size(syndromes, 2)
+  success::AbstractVector{Bool} = zeros(num_trials)
 
-  @assert size(syndromes, 1) == size(errors, 1)
-  num_trials::Int = size(syndromes, 1)
-
-  setup = BeliefPropagationScratchSpace(zeros(decoder.n), fill(decoder.per, decoder.n), zeros(decoder.s, decoder.n), zeros(decoder.s, decoder.n), zeros(decoder.n))
-
-  success::BitArray{1} = zeros(num_trials)
-
-  for i in axes(syndromes, 1)
-    reset!(setup, decoder)
-    success[i] = syndrome_decode!(decoder, setup, syndromes[i, :])
-    errors[i, :] = setup.err
+  for i in axes(syndromes, 2)
+    reset!(decoder)
+    success[i] = syndrome_decode!(decoder, decoder.scratch, syndromes[:, i])
+    errors[:, i] = decoder.scratch.err
   end
 
-  return success
+  return errors, success
 end
