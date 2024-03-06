@@ -1,6 +1,4 @@
-include("decoders/belief_propogation.jl")
-
-# TODO: Depricated, to be removed. Only new implementation is required. 
+# TODO: Depricated, to be removed. Only new implementation is required.
 function syndrome_decode(pcm, pcmT, syndrome, max_iters, channel_probs, b2c, c2b, log_probabs, error)
 
   # Get size of Parity check matrix
@@ -103,8 +101,8 @@ end
 
 # In-place variant
 # TODO: Currently very slow. Need to improve this
-function syndrome_decode!(decoder::BeliefPropagationDecoder, setup::BeliefPropagationScratchSpace, syndrome::BitArray{1})
-  
+function syndrome_decode!(decoder::BeliefPropagationDecoder, setup::BeliefPropagationScratchSpace, syndrome::AbstractVector) # TODO check if casting to bitarrays helps with performance, and raise warnings for the user if there is performance left on the table
+
   # Get size of Parity check matrix
   m, n = size(decoder.sparse_H)
   rows = rowvals(decoder.sparse_H)
@@ -141,7 +139,7 @@ function syndrome_decode!(decoder::BeliefPropagationDecoder, setup::BeliefPropag
       end
     end
 
-    
+
     # Bit to check messages
     for j in 1:n
       temp = setup.channel_probs[j] / (1 - setup.channel_probs[j])
@@ -158,7 +156,7 @@ function syndrome_decode!(decoder::BeliefPropagationDecoder, setup::BeliefPropag
       setup.log_probabs[j] = log(1 / temp)
       if temp >= 1
         setup.err[j] = 1
-      else 
+      else
         setup.err[j] = 0
       end
 
@@ -181,7 +179,7 @@ function syndrome_decode!(decoder::BeliefPropagationDecoder, setup::BeliefPropag
       return true
     end
   end
-  
+
   return false
 
 end
