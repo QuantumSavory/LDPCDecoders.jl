@@ -1,7 +1,7 @@
 name = "LDPCDecoders"
 uuid = "3c486d74-64b9-4c60-8b1a-13a564e77efb"
-authors = ["Krishna Praneet Gudipaty"]
-version = "0.1.1"
+authors = ["Krishna Praneet Gudipaty", "Stefan Krastanov", "QuantumSavory contributors"]
+version = "0.2.0"
 
 [deps]
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
@@ -13,6 +13,9 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
 DelimitedFiles = "1"
+LinearAlgebra = "1"
+Random = "1"
 RowEchelon = "0.2"
+SparseArrays = "1"
 Statistics = "1"
 julia = "1.9"
