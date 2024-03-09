@@ -38,7 +38,7 @@ function bp_simulate(parity_check_matrix, generator_matrix, error_rate, max_tria
 
     # syndrome = (pcm * error) .% 2
 
-    # Belief propogation decoder
+    # Belief propagation decoder
     decoded_message, success = bp_decode(received_message, parity_check_matrix, 0.1)
     println("decoded message = ", decoded_message)
     display(decoded_message)

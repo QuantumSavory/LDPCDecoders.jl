@@ -8,7 +8,7 @@ function syndrome_it_simulate(parity_check_matrix, physical_error_rate, max_tria
   @info "Simulating for $physical_error_rate for $max_trials trials"
   tenths = floor(max_trials/10)
 
-  # Initalization
+  # Initialization
   err = zeros(Bool, num_bits)
   votes = zeros(Int, num_bits)
   curr_syn = zeros(Bool, num_checks)

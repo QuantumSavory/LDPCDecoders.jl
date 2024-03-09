@@ -86,7 +86,7 @@ function bp_decode(parity_check_matrix, received_message, error_rate, max_iterat
   message_c2v = zeros(num_checks, num_bits)
   initialise_checks!(parity_check_matrix, message_c2v, syndrome, num_vs, num_cs)
 
-  # Intialize llr for variable nodes
+  # Initialize llr for variable nodes
   vllr = llr.(received_message, error_rate)
 
   # Send message from variable to check nodes
