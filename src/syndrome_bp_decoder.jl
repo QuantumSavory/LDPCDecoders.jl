@@ -1,4 +1,4 @@
-# TODO: Depricated, to be removed. Only new implementation is required.
+# TODO: Deprecated, to be removed. Only new implementation is required.
 function syndrome_decode(pcm, pcmT, syndrome, max_iters, channel_probs, b2c, c2b, log_probabs, error)
 
   # Get size of Parity check matrix
@@ -6,7 +6,7 @@ function syndrome_decode(pcm, pcmT, syndrome, max_iters, channel_probs, b2c, c2b
   rows = rowvals(pcm)
   rowsT = rowvals(pcmT)
 
-  # Initiliase bit to check messages
+  # Initialize bit to check messages
   for j in 1:n
     for k in nzrange(pcm, j)
       i = rows[k]
@@ -108,7 +108,7 @@ function syndrome_decode!(decoder::BeliefPropagationDecoder, setup::BeliefPropag
   rows = rowvals(decoder.sparse_H)
   rowsT = rowvals(decoder.sparse_HT)
 
-  # Initiliase bit to check messages
+  # Initialize bit to check messages
   for j in 1:n
     for k in nzrange(decoder.sparse_H, j)
       i = rows[k]
