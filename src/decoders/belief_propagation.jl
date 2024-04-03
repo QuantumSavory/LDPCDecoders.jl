@@ -105,13 +105,12 @@ julia> error == guess
 true
 ```
 """
-function decode!(decoder::BeliefPropagationDecoder, syndrome::AbstractVector, error::AbstractVector) # TODO check if casting to bitarrays helps with performance -- if it does, set up warnings to the user for cases where they have not done the casting
+function decode!(decoder::BeliefPropagationDecoder, syndrome::AbstractVector) # TODO check if casting to bitarrays helps with performance -- if it does, set up warnings to the user for cases where they have not done the casting
   reset!(decoder)
-  success = syndrome_decode!(decoder, decoder.scratch, syndrome) # TODO: Delete syndrome_decode! and just move its content here. There is no point in this indirection.
-
   rows::Vector{Int} = rowvals(decoder.sparse_H);
   rowsT::Vector{Int} = rowvals(decoder.sparse_HT); 
   setup = decoder.scratch
+
   for j in 1:decoder.n
     for i in nzrange(decoder.sparse_H, j)
       setup.bit_2_check[rows[i], j] = setup.channel_probs[j] / (1 - setup.channel_probs[j])
@@ -172,8 +171,7 @@ function decode!(decoder::BeliefPropagationDecoder, syndrome::AbstractVector, er
     end
   end
 
-  error = decoder.scratch.err
-  return decoder.scratch.err, success
+  return decoder.scratch.err, converged
 end
 
 """

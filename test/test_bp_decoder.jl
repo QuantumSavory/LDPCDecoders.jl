@@ -11,9 +11,7 @@ using LDPCDecoders
     syn = (H * err) .% 2
 
     bpd = BeliefPropagationDecoder(H, per, 100)
-    decoded_error = zeros(1000)
-
-    guess, success = decode!(bpd, syn, decoded_error)
+    guess, success = decode!(bpd, syn)
 
     return guess == err
   end
