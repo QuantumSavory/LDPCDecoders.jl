@@ -99,16 +99,79 @@ julia> error = rand(1000) .< 0.01;
 
 julia> syndrome = (H * error) .% 2;
 
-julia> guess, success = decode!(decoder, syndrome, zeros(1000));
+julia> guess, success = decode!(decoder, syndrome);
 
 julia> error == guess
 true
 ```
 """
-function decode!(decoder::BeliefPropagationDecoder, syndrome::AbstractVector, error::AbstractVector) # TODO check if casting to bitarrays helps with performance -- if it does, set up warnings to the user for cases where they have not done the casting
+function decode!(decoder::BeliefPropagationDecoder, syndrome::AbstractVector) # TODO check if casting to bitarrays helps with performance -- if it does, set up warnings to the user for cases where they have not done the casting
   reset!(decoder)
-  success = syndrome_decode!(decoder, decoder.scratch, syndrome) # TODO: Delete syndrome_decode! and just move its content here. There is no point in this indirection.
-  return decoder.scratch.err, success
+  rows::Vector{Int} = rowvals(decoder.sparse_H);
+  rowsT::Vector{Int} = rowvals(decoder.sparse_HT); 
+  setup = decoder.scratch
+
+  for j in 1:decoder.n
+    for i in nzrange(decoder.sparse_H, j)
+      setup.bit_2_check[rows[i], j] = setup.channel_probs[j] / (1 - setup.channel_probs[j])
+    end
+  end
+
+  converged = false
+  for iter::Int in decoder.max_iters
+    for i in 1:decoder.s
+      temp::Float64 = (-1) ^ syndrome[i]
+      for k::Int in nzrange(decoder.sparse_HT, i)
+          j = rowsT[k]
+          setup.check_2_bit[i,j] = temp
+          temp *= 2 / (1 + setup.bit_2_check[i,j]) - 1
+      end
+
+      temp = 1.0
+      for k in reverse(nzrange(decoder.sparse_HT, i))
+        j = rowsT[k]
+        setup.check_2_bit[i,j] *= temp
+        setup.check_2_bit[i,j] = (1 - setup.check_2_bit[i,j]) / (1 + setup.check_2_bit[i,j])
+        temp *= 2/(1 + setup.bit_2_check[i,j]) - 1
+      end
+    end
+
+    for j in 1:decoder.n
+      temp::Float64 = setup.channel_probs[j] / (1 - setup.channel_probs[j])
+      
+      for k in nzrange(decoder.sparse_H, j)
+        setup.bit_2_check[rows[k],j] = temp
+        temp *= setup.check_2_bit[rows[k],j]
+        if isnan(temp)
+          temp = 1.0
+        end
+      end
+
+      setup.log_probabs[j] = log(1 / temp)
+      if temp >= 1
+        setup.err[j] = 1
+      else
+        setup.err[j] = 0
+      end
+
+      temp = 1.0
+      for k in reverse(nzrange(decoder.sparse_H, j))
+        setup.bit_2_check[rows[k],j] *= temp
+        temp *= setup.check_2_bit[rows[k],j]
+        if isnan(temp)
+          temp = 1.0
+        end
+      end
+    end
+
+    syndrome_decoded = (decoder.sparse_H * setup.err) .% 2
+    if all(syndrome_decoded .== syndrome)
+      converged = true 
+      break # Break if converged
+    end
+  end
+
+  return decoder.scratch.err, converged
 end
 
 """
