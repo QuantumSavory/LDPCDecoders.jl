@@ -99,7 +99,7 @@ julia> error = rand(1000) .< 0.01;
 
 julia> syndrome = (H * error) .% 2;
 
-julia> guess, success = decode!(decoder, syndrome, zeros(1000));
+julia> guess, success = decode!(decoder, syndrome);
 
 julia> error == guess
 true
