@@ -118,7 +118,7 @@ function decode!(decoder::BeliefPropagationDecoder, syndrome::AbstractVector) # 
   end
 
   converged = false
-  for iter::Int in decoder.max_iters
+  for iter::Int in 1:decoder.max_iters
     for i in 1:decoder.s
       temp::Float64 = (-1) ^ syndrome[i]
       for k::Int in nzrange(decoder.sparse_HT, i)
