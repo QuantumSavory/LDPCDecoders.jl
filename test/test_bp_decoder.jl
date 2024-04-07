@@ -55,9 +55,40 @@ using LDPCDecoders
     return ler
   end
 
+  function test_ldpcdecoder()
+    H = LDPCDecoders.parity_check_matrix(1000,10,9);
+    decoder = LDPCDecoders.BeliefPropagationDecoder(H, 0.01, 100);
+    count = 0
+    for _ in 1:1000
+        error = rand(1000) .< 0.01;
+        syndrome = (H * error) .% 2;
+        guess, success = LDPCDecoders.decode!(decoder, syndrome);
+        count += error == guess
+    end
+    return 1-count/1000
+  end
+
+  function test_ldpcdecoder_old()
+    H = LDPCDecoders.parity_check_matrix(1000,10,9);
+    decoder = LDPCDecoders.BeliefPropagationDecoder(H, 0.01, 100);
+    count = 0
+    for _ in 1:1000
+        error = rand(1000) .< 0.01;
+        syndrome = (H * error) .% 2;
+        LDPCDecoders.reset!(decoder)
+        LDPCDecoders.syndrome_decode!(decoder, decoder.scratch, syndrome)
+        count += error == decoder.scratch.err
+    end
+    return 1-count/1000
+  end
+
+
   @test test_bp_decoder()
 
   # There is a low possibility of these tests failing
   @test test_bp_decoder_batch() < 0.005
   @test test_deprecated_syndrome_decoder() < 0.005
+
+  @test test_ldpcdecoder() < 0.001
+  @test test_ldpcdecoder_old() < 0.001
 end
