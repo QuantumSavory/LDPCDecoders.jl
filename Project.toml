@@ -1,7 +1,7 @@
 name = "LDPCDecoders"
 uuid = "3c486d74-64b9-4c60-8b1a-13a564e77efb"
 authors = ["Krishna Praneet Gudipaty", "Stefan Krastanov", "QuantumSavory contributors"]
-version = "0.3.0"
+version = "0.3.1"
 
 [deps]
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
