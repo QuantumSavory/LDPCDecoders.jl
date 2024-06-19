@@ -15,7 +15,6 @@ export
     BitFlipDecoder
 
 include("generator.jl")
-include("parity.jl")
 include("bp_decoder.jl")
 include("bp_simulator.jl")
 include("it_decoder.jl")
