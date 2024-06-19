@@ -1,5 +1,6 @@
 using LDPCDecoders
 using JET
+using Test
 
 import LinearAlgebra, DelimitedFiles
 
