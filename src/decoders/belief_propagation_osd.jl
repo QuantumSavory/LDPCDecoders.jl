@@ -33,7 +33,7 @@ end
 function osd(H, syndrome, bp_err, osd_order)
     m, n = size(H)
     # diagnolize the submatrix corrsponding to idependent columns via Gaussian elimination
-    # first obtain the row echelon form
+    # first obtain the row canonical form
     # and find least reliable indices, i.e., the first r pivot columns (assume H is rearranged by reliability)
     least_reliable_rows = [] # row indices of pivot elements
     least_reliable_cols = [] # column indices of pivot elements
@@ -47,8 +47,8 @@ function osd(H, syndrome, bp_err, osd_order)
             j += 1
         else
             if k > 1
-                ii = i + k - 1
-                rowswap!(H, i, ii)
+                ii = i + k - 1 # the first row after `i` with 1 in column `j`
+                rowswap!(H, i, ii) # TODO Is this swap necessary? We may just track the row index
                 s[i], s[ii] = s[ii], s[i]
             end
             for ii in i+1:m
