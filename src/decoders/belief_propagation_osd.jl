@@ -21,25 +21,25 @@ function decode!(decoder::BeliefPropagationOSDDecoder, syndrome::AbstractVector)
     bp_err, converged = decode!(decoder.bp_decoder, syndrome) # hard decisions
     bp_log_probabs = decoder.bp_decoder.scratch.log_probabs # soft decisions
     bp_probabs = exp.(bp_log_probabs)
-    # sort colums by reliability, less reliable columns first
+    # sort columns by reliability, less reliable columns first
     sort_by_reliability = sortperm(max.(bp_probabs, 1 .- bp_probabs), rev=true)
     H_sorted = decoder.H[:, sort_by_reliability]
     bp_err_sorted = bp_err[sort_by_reliability]
-    # TODO an optmized version of OSD can be implemented when osd_order = 0, see Algorithm 2 in	https://doi.org/10.22331/q-2021-11-22-585
+    # TODO an optimized version of OSD can be implemented when osd_order = 0, see Algorithm 2 in	https://doi.org/10.22331/q-2021-11-22-585
     err = osd(H_sorted, syndrome, bp_err_sorted, decoder.osd_order)
     return err[invperm(sort_by_reliability)], converged # also return whether BP is converged
 end
 
 function osd(H, syndrome, bp_err, osd_order)
     m, n = size(H)
-    # diagnolize the submatrix corrsponding to idependent columns via Gaussian elimination
+    # diagnolize the submatrix corresponding to independent columns via Gaussian elimination
     # first obtain the row canonical form
     # and find least reliable indices, i.e., the first r pivot columns (assume H is rearranged by reliability)
     least_reliable_rows = [] # row indices of pivot elements
     least_reliable_cols = [] # column indices of pivot elements
     r = 0 # compute rank of H
     i, j = 1, 1
-    s = copy(syndrome) # tranform syndrom along with H in Gaussian elimination
+    s = copy(syndrome) # transform syndrome along with H in Gaussian elimination
 
     while i <= m && j <= n
         k = findfirst(H[i:end, j])
@@ -65,7 +65,7 @@ function osd(H, syndrome, bp_err, osd_order)
         end
     end
 
-    # then obtain a diagnol submatrix on the least reliable part
+    # then obtain a diagonal submatrix on the least reliable part
     for (i, j) in zip(reverse(least_reliable_rows), reverse(least_reliable_cols))
         for ii in 1:i-1
             if H[ii, j]
