@@ -22,11 +22,8 @@ function decode!(decoder::BeliefPropagationOSDDecoder, syndrome::AbstractVector)
     sort_by_reliability = sortperm(max.(bp_probabs, 1 .- bp_probabs), rev=true)
     H_sorted = decoder.H[:, sort_by_reliability]
     bp_err_sorted = bp_err[sort_by_reliability]
-    if decoder.osd_order == 0
-        err = fastosd0(H_sorted, syndrome, bp_err_sorted)
-    else
-        err = osd(H_sorted, syndrome, bp_err_sorted, decoder.osd_order)
-    end
+    # TODO an optmized version of OSD can be implemented when osd_order = 0, see Algorithm 2 in	https://doi.org/10.22331/q-2021-11-22-585
+    err = osd(H_sorted, syndrome, bp_err_sorted, decoder.osd_order)
     return err[invperm(sort_by_reliability)], converged # also return whether BP is converged
 end
 
@@ -48,7 +45,7 @@ function osd(H, syndrome, bp_err, osd_order)
         else
             if k > 1
                 ii = i + k - 1 # the first row after `i` with 1 in column `j`
-                rowswap!(H, i, ii) # TODO Is this swap necessary? We may just track the row index
+                rowswap!(H, i, ii) # TODO For optimization: Is this swap necessary? We may just track the row index
                 s[i], s[ii] = s[ii], s[i]
             end
             for ii in i+1:m
@@ -99,7 +96,8 @@ function osd(H, syndrome, bp_err, osd_order)
                 err[j] ⊻= H[i, k] * err[k]
             end
         end
-        weight = sum(err) # TODO Actually it should be a function depending on the noise model
+        weight = sum(err) # This weight is set for depolarizing noise
+        # TODO More generally, it should be a function depending on the noise model
         if weight < min_weight
             min_weight = weight
             best_err = copy(err)
@@ -107,9 +105,4 @@ function osd(H, syndrome, bp_err, osd_order)
     end
 
     return best_err
-end
-
-function fastosd0(H, syndrome, bp_err)
-    # TODO a optmized special case of osd with osd_order = 0 to be implemented
-    osd(H, syndrome, bp_err, 0)
 end
