@@ -94,7 +94,7 @@ function osd(H, syndrome, bp_err, osd_order)
         end
         # then based on the `most_reliable_cols` part of errors, compute the `least_reliable_cols` part of errors
         for (i, j) in zip(least_reliable_rows, least_reliable_cols)
-            err[j] = s[j]
+            err[j] = s[i]
             for k in most_reliable_cols
                 err[j] ⊻= H[i, k] * err[k]
             end
