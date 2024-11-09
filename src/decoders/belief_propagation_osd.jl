@@ -1,6 +1,9 @@
 struct BeliefPropagationOSDDecoder <: AbstractDecoder
+    """A belief propagation decoder as a subroutine"""
     bp_decoder::BeliefPropagationDecoder
-    H::BitMatrix # use dense matrix
+    """Dense form of the parity check matrix"""
+    H::BitMatrix
+    """The order of OSD; defaulted to be 0 in the constructor"""
     osd_order::Int
 end
 
