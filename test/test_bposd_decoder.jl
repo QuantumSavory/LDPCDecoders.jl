@@ -16,7 +16,7 @@ using LDPCDecoders
     return guess == err
   end
 
-  """Test"""
+  """Test for BP-OSD decoder with large error rate. Even if the decoding is not accurate, OSD will still ensure consistency between guess and syndromes."""
   function test_bposd_decoder_large_error_rate()
     H = LDPCDecoders.parity_check_matrix(1000, 10, 9)
     per = 0.2
@@ -29,6 +29,6 @@ using LDPCDecoders
     return syn == (H * guess) .% 2
   end
 
-  @test test_bp_decoder()
+  @test test_bposd_decoder()
   @test test_bposd_decoder_large_error_rate()
 end
