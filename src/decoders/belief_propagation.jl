@@ -44,7 +44,7 @@ struct BeliefPropagationDecoder <: AbstractDecoder
   scratch::BeliefPropagationScratchSpace
 end
 
-function BeliefPropagationDecoder(H, per::Float64, max_iters::Int)
+function BeliefPropagationDecoder(H::Union{SparseArrays.SparseMatrixCSC{Bool,Int}, BitMatrix}, per::Float64, max_iters::Int)
   s, n = size(H)
   sparse_H = sparse(H)
   sparse_HT = sparse(H')
@@ -108,7 +108,7 @@ true
 function decode!(decoder::BeliefPropagationDecoder, syndrome::AbstractVector) # TODO check if casting to bitarrays helps with performance -- if it does, set up warnings to the user for cases where they have not done the casting
   reset!(decoder)
   rows::Vector{Int} = rowvals(decoder.sparse_H);
-  rowsT::Vector{Int} = rowvals(decoder.sparse_HT); 
+  rowsT::Vector{Int} = rowvals(decoder.sparse_HT);
   setup = decoder.scratch
 
   for j in 1:decoder.n
@@ -138,7 +138,7 @@ function decode!(decoder::BeliefPropagationDecoder, syndrome::AbstractVector) # 
 
     for j in 1:decoder.n
       temp::Float64 = setup.channel_probs[j] / (1 - setup.channel_probs[j])
-      
+
       for k in nzrange(decoder.sparse_H, j)
         setup.bit_2_check[rows[k],j] = temp
         temp *= setup.check_2_bit[rows[k],j]
@@ -166,7 +166,7 @@ function decode!(decoder::BeliefPropagationDecoder, syndrome::AbstractVector) # 
 
     syndrome_decoded = (decoder.sparse_H * setup.err) .% 2
     if all(syndrome_decoded .== syndrome)
-      converged = true 
+      converged = true
       break # Break if converged
     end
   end

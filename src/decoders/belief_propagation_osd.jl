@@ -7,7 +7,7 @@ struct BeliefPropagationOSDDecoder <: AbstractDecoder
     osd_order::Int
 end
 
-function BeliefPropagationOSDDecoder(H, per::Float64, max_iters::Int; osd_order::Int=0)
+function BeliefPropagationOSDDecoder(H::BitMatrix, per::Float64, max_iters::Int; osd_order::Int=0)
     bp_decoder = BeliefPropagationDecoder(H, per, max_iters)
     return BeliefPropagationOSDDecoder(bp_decoder, H, osd_order)
 end
@@ -90,7 +90,9 @@ function osd(H, syndrome, bp_err, osd_order)
         # try all possible errors on the first `osd_order` bits within `most_reliable_cols`
         if x != 0
             trial_err = BitArray([x >> i & 1 for i in 0:osd_order-1])
-            err[most_reliable_cols[1:osd_order]] = trial_err
+            for j in 1:osd_order
+                err[most_reliable_cols[j]] = trial_err[j]
+            end
         end
         # then based on the `most_reliable_cols` part of errors, compute the `least_reliable_cols` part of errors
         for (i, j) in zip(least_reliable_rows, least_reliable_cols)
