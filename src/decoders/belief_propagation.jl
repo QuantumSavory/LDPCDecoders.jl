@@ -44,7 +44,7 @@ struct BeliefPropagationDecoder <: AbstractDecoder
   scratch::BeliefPropagationScratchSpace
 end
 
-function BeliefPropagationDecoder(H::Union{SparseArrays.SparseMatrixCSC{Bool,Int}, BitMatrix}, per::Float64, max_iters::Int)
+function BeliefPropagationDecoder(H, per::Float64, max_iters::Int)
   s, n = size(H)
   sparse_H = sparse(H)
   sparse_HT = sparse(H')
