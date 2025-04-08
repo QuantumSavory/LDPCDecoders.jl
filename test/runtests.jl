@@ -32,6 +32,7 @@ println("ENV[\"PYTHON\"] = \"$(get(ENV,"PYTHON",nothing))\"")
 @doset "bp_decoder"
 @doset "bposd_decoder"
 @doset "bf_decoder"
+@doset "bpots"  #bpots tests
 
 VERSION >= v"1.10" && @doset "doctests"
 get(ENV,"JET_TEST","")=="true" && @doset "jet"
