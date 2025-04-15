@@ -43,7 +43,7 @@ end
 
 
 # BP-OTS STATE INITIALIZATION
-# This creates the inital computational state for the BP-OTS algorithm
+# This creates the initial computational state for the BP-OTS algorithm
 function initialize_bpots_state(H::SparseMatrixCSC, n::Int)
     # Initializing 2 variables to store messages that flow through the Tanner graph
     messages_vc = Dict{Tuple{Int,Int}, Float64}()
@@ -118,7 +118,7 @@ end
 
 
 # COMPUTES BELIEFS AND MAKE DECISIONS
-# After msg passing iterations, this function takes all the informations and decides which qubits most likely have the errors
+# After msg passing iterations, this function takes all the information and decides which qubits most likely have the errors
 function compute_beliefs!(decoder::BPOTSDecoder, state::BPOTSState, Ω::Vector{Float64})
     fill!(state.decisions, 0)
     fill!(state.llrs, 0)
@@ -140,7 +140,7 @@ end
 
 
 
-#RESEST STATE BETWEEN DECODINGS
+#RESET STATE BETWEEN DECODINGS
 #Prepares the decoder for reuase by clearing its internal state
 function reset!(decoder::BPOTSDecoder)
     state = decoder.scratch # reference to scratch state object

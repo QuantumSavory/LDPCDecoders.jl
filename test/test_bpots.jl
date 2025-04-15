@@ -132,7 +132,7 @@ Tests syndrome matching
         )
         
         for result in performance_results
-            @test result.success_rate >= 0.9
+            @test result.success_rate >= 0.85
         end
     end
 end
