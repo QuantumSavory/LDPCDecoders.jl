@@ -25,6 +25,7 @@ include("decoders/abstract_decoder.jl")
 include("decoders/belief_propagation.jl")
 include("decoders/belief_propagation_osd.jl")
 include("decoders/iterative_bitflip.jl")
+include("decoders/bpots_decoder.jl")
 
 include("syndrome_bp_decoder.jl")
 include("syndrome_simulator.jl")
