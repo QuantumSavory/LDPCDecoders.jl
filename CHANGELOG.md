@@ -1,5 +1,9 @@
 # News
 
+## v0.3.4 - dev
+
+- bump julia compat to 1.12
+
 ## v0.3.3 - 2025-04-15
 
 - Added an implementation for BP-OTS decoder.
