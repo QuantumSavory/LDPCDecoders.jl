@@ -21,6 +21,21 @@ function BeliefPropagationScratchSpace(n, s, per)
   return BeliefPropagationScratchSpace(zeros(n), fill(per, n), zeros(s, n), zeros(s, n), zeros(n))
 end
 
+"""
+    BeliefPropagationDecoder(H, per::Float64, max_iters::Int)
+
+A sum-product belief propagation decoder for LDPC codes.
+
+Operates on the Tanner graph of the parity check matrix `H`, passing
+log-likelihood ratio messages between variable and check nodes.
+Pre-allocates a [`BeliefPropagationScratchSpace`] to avoid memory
+allocation during `decode!` calls.
+
+# Arguments
+- `H`: Parity check matrix (any matrix type; converted to sparse internally).
+- `per::Float64`: Physical error rate (channel crossover probability).
+- `max_iters::Int`: Maximum number of BP iterations.
+"""
 struct BeliefPropagationDecoder <: AbstractDecoder
   "Physical error rate"
   per::Float64

@@ -1,1 +1,0 @@
-Source directory for documentation using Documenter.

@@ -11,9 +11,11 @@ using RowEchelon
 
 export
     decode!, batchdecode!,
+    AbstractDecoder,
     BeliefPropagationDecoder,
     BeliefPropagationOSDDecoder,
-    BitFlipDecoder
+    BitFlipDecoder,
+    BPOTSDecoder
 
 include("generator.jl")
 include("bp_decoder.jl")
