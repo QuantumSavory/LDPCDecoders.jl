@@ -3,6 +3,7 @@
 ## v0.3.4 - dev
 
 - bump julia compat to 1.12
+- fix deprecated `parity_checks_x` API call in BP-OTS tests (now `parity_matrix_x`)
 
 ## v0.3.3 - 2025-04-15
 
