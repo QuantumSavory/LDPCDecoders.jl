@@ -1,11 +1,11 @@
 # BP-OTS Decoder
 
-The [`BPOTSDecoder`](@ref) implements Belief Propagation with Ordered Trapping Set (OTS) biasing. This algorithm extends standard BP by detecting oscillating variable nodes (trapping sets) that prevent convergence, and periodically applying a bias to break them out of decoding failures.
+The [`BPOTSDecoder`](@ref) runs belief propagation with Ordered Trapping Set (OTS) biasing. It detects oscillating variable nodes (trapping sets) that stall convergence and applies a corrective bias periodically to get unstuck.
 
-The algorithm follows a biasing schedule controlled by the period `T` and bias constant `C`:
+Biasing schedule:
 1. Run standard BP message passing.
-2. Every `T` iterations, identify the variable node with the highest oscillation count.
-3. Apply a negative bias (`-C`) to that node's prior belief to push it toward being flipped.
+2. Every `T` iterations, find the variable node with the highest oscillation count.
+3. Apply a negative bias (`-C`) to that node's prior belief to push it toward flipping.
 4. Continue BP with the modified beliefs.
 
 ## Usage
@@ -26,9 +26,10 @@ guess, converged = decode!(decoder, syndrome)
 
 - `H` — Parity check matrix (`BitMatrix` or `SparseMatrixCSC{Bool,Int}`).
 - `per::Float64` — Physical error rate.
-- `max_iters::Int` — Maximum number of BP iterations.
-- `T::Int` — Biasing period (default `9`). How often the OTS bias is applied.
-- `C::Float64` — Bias constant (default `2.0`). Strength of the bias applied to oscillating nodes.
+- `max_iters::Int` — Maximum BP iterations.
+- `T::Int` — Bias period (default `9`).
+- `C::Float64` — Bias strength (default `2.0`).
 
 ## API
 
+See the [API Reference](../api.md) for full docstrings.

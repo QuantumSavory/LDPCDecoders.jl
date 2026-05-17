@@ -1,10 +1,11 @@
 # LDPCDecoders.jl
 
-A Julia package providing iterative decoders for Low-Density Parity-Check (LDPC) codes, with a focus on quantum error correction applications.
+Iterative decoders for Low-Density Parity-Check (LDPC) codes in Julia, aimed at
+quantum error correction applications.
 
 ## Overview
 
-LDPCDecoders.jl implements several classical LDPC decoding algorithms that can be used standalone or bridged into [QuantumClifford.jl](https://github.com/QuantumSavory/QuantumClifford.jl) via the `QuantumCliffordLDPCDecodersExt` package extension for quantum syndrome decoding and benchmarking.
+LDPCDecoders.jl provides several classical LDPC decoding algorithms, usable standalone or plugged into [QuantumClifford.jl](https://github.com/QuantumSavory/QuantumClifford.jl) via the `QuantumCliffordLDPCDecodersExt` extension for quantum syndrome decoding and benchmarking.
 
 ### Available Decoders
 
@@ -17,12 +18,15 @@ LDPCDecoders.jl implements several classical LDPC decoding algorithms that can b
 
 ### Architecture
 
-All decoders follow a common pattern:
+All decoders follow the same structure:
 
 1. **`AbstractDecoder`** — Every decoder subtypes this abstract type.
-2. **`ScratchSpace`** — Each decoder pre-allocates mutable working arrays to prevent memory allocations during the decoding loop.
-3. **`decode!(decoder, syndrome)`** — The mutating entry point that decodes a syndrome vector in-place using the pre-allocated scratch space.
-4. **`batchdecode!(decoder, syndromes, errors)`** — Batch variant that re-uses the same scratch space across multiple decoding trials.
+2. **`ScratchSpace`** — Each decoder preallocates mutable working arrays to avoid
+   allocations during the decoding loop.
+3. **`decode!(decoder, syndrome)`** — Decodes a syndrome vector in-place using the
+   preallocated scratch space.
+4. **`batchdecode!(decoder, syndromes, errors)`** — Batch variant that reuses the same
+   scratch space across calls.
 
 ## Quick Start
 

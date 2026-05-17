@@ -1,8 +1,8 @@
 # Iterative BitFlip Decoder
 
-The [`BitFlipDecoder`](@ref) implements the classical hard-decision bit-flip decoding algorithm. At each iteration, it computes a syndrome from the current error estimate, counts "votes" from unsatisfied checks for each bit, and flips the bit with the most votes. This process repeats until the syndrome matches or no further improvement is possible.
+The [`BitFlipDecoder`](@ref) runs the classical hard-decision bit-flip algorithm. Each iteration computes a syndrome, counts unsatisfied check votes per bit, and flips the top candidate — repeating until the syndrome is zero or the vote counts stop changing.
 
-BitFlip decoding is the simplest iterative decoder and serves as a useful baseline for benchmarking more sophisticated algorithms.
+It's the simplest iterative decoder and a reasonable baseline for comparing against heavier algorithms.
 
 ## Usage
 
@@ -30,3 +30,4 @@ guesses, successes = batchdecode!(decoder, syndromes, zero(errors))
 
 ## API
 
+See the [API Reference](../api.md) for full docstrings.

@@ -1,8 +1,8 @@
 # Belief Propagation + OSD Decoder
 
-The [`BeliefPropagationOSDDecoder`](@ref) combines standard belief propagation with Ordered Statistics Decoding (OSD) as a post-processing step. After BP produces soft decisions (log-likelihood ratios), columns of the parity check matrix are sorted by reliability and Gaussian elimination is performed on the least reliable subset to find a minimum-weight correction.
+The [`BeliefPropagationOSDDecoder`](@ref) runs BP to get soft decisions (log-likelihood ratios), then sorts parity check matrix columns by reliability and applies Gaussian elimination on the unreliable columns to find a minimum-weight correction.
 
-This decoder is particularly effective when standard BP fails to converge, as OSD can still recover a valid correction from the soft information.
+OSD post-processing lets the decoder recover a valid correction even when BP doesn't converge.
 
 ## Usage
 
@@ -20,10 +20,12 @@ guess, converged = decode!(decoder, syndrome)
 
 ## Parameters
 
-- `H::BitMatrix` — The parity check matrix (must be a `BitMatrix`).
+- `H::BitMatrix` — Parity check matrix (must be a `BitMatrix`).
 - `per::Float64` — Physical error rate.
 - `max_iters::Int` — Maximum BP iterations.
-- `osd_order::Int` — Order of OSD post-processing (default `0`). Higher orders search more candidate corrections but scale exponentially.
+- `osd_order::Int` — OSD post-processing order (default `0`). Higher orders check more
+  candidate corrections but scale exponentially.
 
 ## API
 
+See the [API Reference](../api.md) for full docstrings.

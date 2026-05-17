@@ -1,6 +1,6 @@
 # Belief Propagation Decoder
 
-The [`BeliefPropagationDecoder`](@ref) implements the standard sum-product belief propagation algorithm for decoding LDPC codes. It operates on the Tanner graph representation of the parity check matrix, passing log-likelihood ratio (LLR) messages between variable and check nodes until convergence or a maximum iteration count is reached.
+The [`BeliefPropagationDecoder`](@ref) runs the sum-product algorithm on the Tanner graph of the parity check matrix, passing LLR messages between variable and check nodes until the syndrome is zero or the iteration limit is reached.
 
 ## Usage
 
@@ -18,7 +18,8 @@ guess, converged = decode!(decoder, syndrome)
 
 ## Batch Decoding
 
-For running many decoding trials efficiently, use [`batchdecode!`](@ref) which re-uses the same pre-allocated scratch space:
+For many decoding trials, [`batchdecode!`](@ref) reuses the same scratch space across
+calls:
 
 ```julia
 samples = 100
@@ -30,3 +31,4 @@ guesses, successes = batchdecode!(decoder, syndromes, zero(errors))
 
 ## API
 
+See the [API Reference](../api.md) for full docstrings.
