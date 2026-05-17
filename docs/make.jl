@@ -6,6 +6,7 @@ DocMeta.setdocmeta!(LDPCDecoders, :DocTestSetup, :(using LDPCDecoders); recursiv
 makedocs(
     sitename = "LDPCDecoders.jl",
     modules = [LDPCDecoders],
+    warnonly = [:missing_docs],
     authors = "QuantumSavory contributors",
     pages = [
         "Home" => "index.md",

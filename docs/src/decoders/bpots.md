@@ -17,7 +17,7 @@ H = BitMatrix(LDPCDecoders.parity_check_matrix(1000, 10, 9))
 decoder = BPOTSDecoder(H, 0.01, 100; T=9, C=2.0)
 
 error = rand(1000) .< 0.01
-syndrome = Bool.((H * error) .% 2)
+syndrome = Vector{Bool}((H * error) .% 2)
 
 guess, converged = decode!(decoder, syndrome)
 ```

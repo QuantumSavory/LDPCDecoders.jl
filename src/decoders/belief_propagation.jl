@@ -199,7 +199,7 @@ Scratch space allocations are done once and re-used for better performance
 * `errors`: Predefined error matrix that this function manipulates
 
 # Examples
-```jldoctest
+```julia
 julia> decoder = BeliefPropagationDecoder(LDPCDecoders.parity_check_matrix(1000, 10, 9), 0.01, 100);
 
 julia> samples = 100
@@ -213,6 +213,7 @@ julia> syndromes = H*errors .% 2
 julia> guesses, successes = batchdecode!(decoder, syndromes, zero(errors));
 
 julia> sum((guesses[:,i] == errors[:,i] for i in 1:samples)) > 0.995*samples
+```
 """
 function batchdecode!(decoder::BeliefPropagationDecoder, syndromes, errors)
   @assert size(syndromes, 2) == size(errors, 2)

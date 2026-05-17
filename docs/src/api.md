@@ -17,7 +17,4 @@ BPOTSDecoder
 ```@docs
 decode!
 batchdecode!
-LDPCDecoders.reset!(::BeliefPropagationDecoder)
-LDPCDecoders.reset!(::BitFlipDecoder)
-LDPCDecoders.parity_check_matrix
 ```
