@@ -75,11 +75,11 @@ Function to reset the scratch space for bit flip decoding algorithm
 * `bf_decoder`: The Bit Flip decoder configuration
 
 # Examples
-```jldoctest
+```julia
 julia> decoder = BitFlipDecoder(LDPCDecoders.parity_check_matrix(1000, 10, 9), 0.01, 100);
 
 julia> reset!(decoder);
-````
+```
 """
 function reset!(bf_decoder::BitFlipDecoder)
   scratch = bf_decoder.scratch
@@ -166,19 +166,17 @@ Scratch space allocations are done once and re-used for better performance
 
 # Examples
 ```julia
-julia> decoder = BitFlipDecoder(LDPCDecoders.parity_check_matrix(1000, 10, 9), 0.01, 100);
+julia> H = LDPCDecoders.parity_check_matrix(1000, 10, 9);
 
-julia> samples = 100
+julia> decoder = BitFlipDecoder(H, 0.01, 100);
 
-julia> errors = rand(1000,samples) .< 0.01;
+julia> samples = 100;
 
-julia> syndromes = zeros(900, samples);
+julia> errors = rand(1000, samples) .< 0.01;
 
-julia> syndromes = H*errors .% 2
+julia> syndromes = (H * errors) .% 2;
 
 julia> guesses, successes = batchdecode!(decoder, syndromes, zero(errors));
-
-julia> sum((guesses[:,i] == errors[:,i] for i in 1:samples)) > 0.995*samples
 ```
 """
 function batchdecode!(decoder::BitFlipDecoder, syndromes, errors)

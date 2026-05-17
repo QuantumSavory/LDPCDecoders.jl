@@ -231,6 +231,16 @@ end
 
 
 
+"""
+    decode!(decoder::BPOTSDecoder, syndrome::Vector{Bool})
+
+Decode `syndrome` using BP with Ordered Trapping Set biasing.
+
+Runs BP message passing and periodically biases oscillating variable nodes
+every `T` iterations to break out of trapping sets.
+
+Returns `(error_estimate, converged)`.
+"""
 # DECODE (MAIN ALGORITHM)
 function decode!(decoder::BPOTSDecoder, syndrome::Vector{Bool})
     state = decoder.scratch

@@ -32,6 +32,17 @@ function rowswap!(H::BitMatrix, i, j)
     @inbounds H[i, :], H[j, :] = H[j, :], H[i, :] # TODO This could be further optimized?
 end
 
+"""
+    decode!(decoder::BeliefPropagationOSDDecoder, syndrome::AbstractVector)
+
+Decode `syndrome` using BP followed by OSD post-processing.
+
+Runs BP to obtain soft decisions, sorts columns of the parity check matrix by
+reliability, then applies Gaussian elimination on the least reliable columns
+to find a minimum-weight correction.
+
+Returns `(error_estimate, converged)` where `converged` indicates whether BP converged.
+"""
 function decode!(decoder::BeliefPropagationOSDDecoder, syndrome::AbstractVector)
     # use BP to get hard and soft decisions
     bp_err, converged = decode!(decoder.bp_decoder, syndrome) # hard decisions
