@@ -21,16 +21,16 @@ end
 """
     BitFlipDecoder(H, per::Float64, max_iters::Int)
 
-A hard-decision iterative bit-flip decoder for LDPC codes.
+Hard-decision iterative bit-flip decoder for LDPC codes.
 
-At each iteration, computes a syndrome from the current error estimate, counts
-votes from unsatisfied checks for each bit, and flips the bit with the most votes.
-Pre-allocates a `BitFlipScratchSpace` to avoid memory allocation during decoding.
+Each iteration computes a syndrome, counts how many unsatisfied checks vote for
+flipping each bit, and flips the top candidate. A `BitFlipScratchSpace` is
+allocated once at construction to avoid per-call allocations during decoding.
 
 # Arguments
 - `H`: Parity check matrix (any matrix type; converted to sparse internally).
 - `per::Float64`: Physical error rate.
-- `max_iters::Int`: Maximum number of bit-flip iterations.
+- `max_iters::Int`: Maximum bit-flip iterations.
 """
 struct BitFlipDecoder <: AbstractDecoder
   "Physical error rate"

@@ -27,16 +27,15 @@ end
 """
     BPOTSDecoder(H, per::Float64, max_iters::Int; T::Int=9, C::Float64=2.0)
 
-A belief propagation decoder with Ordered Trapping Set (OTS) biasing.
+Belief propagation decoder with Ordered Trapping Set (OTS) biasing.
 
-Extends standard BP by detecting oscillating variable nodes (trapping sets) that
-prevent convergence, and periodically applying a bias to break out of decoding
-failures. The biasing schedule is controlled by period `T` and bias constant `C`.
+Detects oscillating variable nodes (trapping sets) that stall convergence and
+applies a corrective bias every `T` iterations, scaled by `C`, to get unstuck.
 
 # Arguments
 - `H`: Parity check matrix (`BitMatrix` or `SparseMatrixCSC{Bool,Int}`).
 - `per::Float64`: Physical error rate.
-- `max_iters::Int`: Maximum number of BP iterations.
+- `max_iters::Int`: Maximum BP iterations.
 - `T::Int`: Biasing period (default `9`).
 - `C::Float64`: Bias constant (default `2.0`).
 """

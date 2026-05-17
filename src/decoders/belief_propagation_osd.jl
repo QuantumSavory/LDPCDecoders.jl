@@ -1,18 +1,18 @@
 """
     BeliefPropagationOSDDecoder(H::BitMatrix, per::Float64, max_iters::Int; osd_order::Int=0)
 
-A belief propagation decoder with Ordered Statistics Decoding (OSD) post-processing.
+Belief propagation decoder with Ordered Statistics Decoding (OSD) post-processing.
 
-First runs standard BP to obtain soft decisions (log-likelihood ratios), then sorts
-columns of the parity check matrix by reliability and performs Gaussian elimination
-on the least reliable subset to find a minimum-weight correction.
+Runs BP to get soft decisions (log-likelihood ratios), sorts parity check matrix columns
+by reliability, then applies Gaussian elimination on the unreliable columns to find a
+minimum-weight correction.
 
 # Arguments
 - `H::BitMatrix`: Parity check matrix.
 - `per::Float64`: Physical error rate.
-- `max_iters::Int`: Maximum number of BP iterations.
-- `osd_order::Int`: Order of OSD post-processing (default `0`). Higher orders search
-  more candidate corrections but scale as `O(2^osd_order)`.
+- `max_iters::Int`: Maximum BP iterations.
+- `osd_order::Int`: OSD post-processing order (default `0`). Higher values check more
+  candidate corrections but scale as `O(2^osd_order)`.
 """
 struct BeliefPropagationOSDDecoder <: AbstractDecoder
     """A belief propagation decoder as a subroutine"""

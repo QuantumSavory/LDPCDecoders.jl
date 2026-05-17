@@ -3,7 +3,7 @@
 
 Abstract supertype for all LDPC decoders in this package.
 
-Every concrete decoder (e.g., [`BeliefPropagationDecoder`](@ref), [`BitFlipDecoder`](@ref))
-subtypes `AbstractDecoder` and implements the [`decode!`](@ref) interface.
+Concrete decoders (e.g., [`BeliefPropagationDecoder`](@ref), [`BitFlipDecoder`](@ref))
+subtype `AbstractDecoder` and must implement [`decode!`](@ref).
 """
 abstract type AbstractDecoder end

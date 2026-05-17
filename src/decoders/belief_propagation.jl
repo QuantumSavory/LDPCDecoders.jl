@@ -24,17 +24,16 @@ end
 """
     BeliefPropagationDecoder(H, per::Float64, max_iters::Int)
 
-A sum-product belief propagation decoder for LDPC codes.
+Sum-product belief propagation decoder for LDPC codes.
 
-Operates on the Tanner graph of the parity check matrix `H`, passing
-log-likelihood ratio messages between variable and check nodes.
-Pre-allocates a [`BeliefPropagationScratchSpace`] to avoid memory
-allocation during `decode!` calls.
+Works on the Tanner graph of `H`, passing log-likelihood ratio messages
+between variable and check nodes. A [`BeliefPropagationScratchSpace`] is
+allocated once at construction to avoid per-call allocations in `decode!`.
 
 # Arguments
 - `H`: Parity check matrix (any matrix type; converted to sparse internally).
 - `per::Float64`: Physical error rate (channel crossover probability).
-- `max_iters::Int`: Maximum number of BP iterations.
+- `max_iters::Int`: Maximum BP iterations.
 """
 struct BeliefPropagationDecoder <: AbstractDecoder
   "Physical error rate"
