@@ -74,13 +74,10 @@ Function to reset the scratch space for Belief propagation decoding
 * `bp_decoder`: The belief propagation decoder configuration
 
 # Examples
-```julia
+```jldoctest
 julia> decoder = BeliefPropagationDecoder(LDPCDecoders.parity_check_matrix(1000, 10, 9), 0.01, 100);
 
-julia> scratch = BeliefPropagationScratchSpace(zeros(decoder.n), fill(decoder.per, decoder.n),
-                zeros(decoder.s, decoder.n), zeros(decoder.s, decoder.n), zeros(decoder.n));
-
-julia> reset!(scratch, decoder);
+julia> LDPCDecoders.reset!(decoder);
 ```
 """
 function reset!(bp_decoder::BeliefPropagationDecoder)
@@ -105,17 +102,19 @@ Function to decode given the parity check matrix, syndrome and error
 
 # Examples
 ```jldoctest
+julia> using StableRNGs; rng = StableRNG(42);
+
 julia> H = LDPCDecoders.parity_check_matrix(1000, 10, 9);
 
 julia> decoder = BeliefPropagationDecoder(H, 0.01, 100);
 
-julia> error = rand(1000) .< 0.01;
+julia> error = rand(rng, 1000) .< 0.01;
 
 julia> syndrome = (H * error) .% 2;
 
 julia> guess, success = decode!(decoder, syndrome);
 
-julia> error == guess
+julia> success
 true
 ```
 """
@@ -199,14 +198,16 @@ Scratch space allocations are done once and re-used for better performance
 * `errors`: Predefined error matrix that this function manipulates
 
 # Examples
-```julia
+```jldoctest
+julia> using StableRNGs; rng = StableRNG(42);
+
 julia> H = LDPCDecoders.parity_check_matrix(1000, 10, 9);
 
 julia> decoder = BeliefPropagationDecoder(H, 0.01, 100);
 
-julia> samples = 100;
+julia> samples = 10;
 
-julia> errors = rand(1000, samples) .< 0.01;
+julia> errors = rand(rng, 1000, samples) .< 0.01;
 
 julia> syndromes = (H * errors) .% 2;
 

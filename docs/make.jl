@@ -1,12 +1,14 @@
 using Documenter
 using LDPCDecoders
 
-DocMeta.setdocmeta!(LDPCDecoders, :DocTestSetup, :(using LDPCDecoders); recursive=true)
+DocMeta.setdocmeta!(LDPCDecoders, :DocTestSetup, :(using LDPCDecoders, StableRNGs); recursive=true)
 
 makedocs(
     sitename = "LDPCDecoders.jl",
     modules = [LDPCDecoders],
     authors = "QuantumSavory contributors",
+    linkcheck = true,
+    warnonly = [:missing_docs, :linkcheck],
     pages = [
         "Home" => "index.md",
         "Decoders" => [
