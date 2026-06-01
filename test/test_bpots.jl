@@ -117,7 +117,7 @@ Tests syndrome matching
         # Generate toric code matrix with a smaller distance for testing
         d_test = 3
         println("Generating toric code matrix (d=$d_test)...")
-        H_toric = parity_checks_x(Toric(d_test, d_test))
+        H_toric = parity_matrix_x(Toric(d_test, d_test))
         
         # Test with reduced noise levels and iterations for faster testing
         noise_levels = [0.01, 0.05, 0.1]
