@@ -169,7 +169,7 @@ julia> sum((guesses[:,i] == errors[:,i] for i in 1:samples)) > 0.995*samples
 function batchdecode!(decoder::BitFlipDecoder, syndromes, errors)
   @assert size(syndromes, 2) == size(errors, 2)
   num_trials::Int = size(syndromes, 2)
-  converged::AbstractVector{Bool} = zeros(num_trials)
+  converged = falses(num_trials)
 
   for i in axes(syndromes, 2)
     reset!(decoder)
