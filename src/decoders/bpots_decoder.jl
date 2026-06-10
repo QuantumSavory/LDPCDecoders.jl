@@ -197,7 +197,7 @@ end
 
 # # UPDATE CHECK TO VARIABLE MSG (Eq 2)  [μ^(ℓ)i→j = (-1)^s_i · 2 tanh^(-1)(∏(j'∈N(c_i)\{v_j}) tanh(1/2 ν^(ℓ-1)_j'→i))]
 # # Check node i evaluate the parity constraint based on all other connected variables and informs the variable j about what this implies for j's error status
-function update_check_to_variable!(decoder::BPOTSDecoder, state::BPOTSState, i::Int, j::Int, H::SparseMatrixCSC, syndrome::Vector{Bool})
+function update_check_to_variable!(decoder::BPOTSDecoder, state::BPOTSState, i::Int, j::Int, H::SparseMatrixCSC, syndrome::AbstractVector)
     # Compute product of tanh values from other variables
     prod_tanh = 1.0
     MAX_TANH = 0.99999  # For numerical stability
@@ -242,7 +242,7 @@ every `T` iterations to break out of trapping sets.
 Returns `(error_estimate, converged)`.
 """
 # DECODE (MAIN ALGORITHM)
-function decode!(decoder::BPOTSDecoder, syndrome::Vector{Bool})
+function decode!(decoder::BPOTSDecoder, syndrome::AbstractVector)
     state = decoder.scratch
     reset!(decoder)
     
