@@ -5,7 +5,7 @@ using Test
 using SparseArrays
 using Random
 using QuantumClifford.ECC
-import LDPCDecoders: BPOTSDecoder, BeliefPropagationDecoder, decode!, reset!
+import LDPCDecoders: BPOTSDecoder, BeliefPropagationDecoder, decode!, batchdecode!, reset!
 
 #= 
 Tests syndrome matching
@@ -134,5 +134,35 @@ Tests syndrome matching
         for result in performance_results
             @test result.success_rate >= 0.85
         end
+    end
+
+    @testset "Batch Decoding" begin
+        H = create_cycle_matrix(8)
+        decoder = BPOTSDecoder(H, 0.01, 100; T=9, C=3.0)
+
+        samples = 5
+        syndromes = hcat([generate_random_syndrome(H) for _ in 1:samples]...)
+        errors_buf = zeros(Int, size(H, 2), samples)
+
+        guesses, successes = batchdecode!(decoder, syndromes, errors_buf)
+
+        for i in 1:samples
+            decoded_syndrome = Bool.(mod.(H * guesses[:, i], 2))
+            @test decoded_syndrome == syndromes[:, i]
+        end
+    end
+
+    @testset "decode! accepts AbstractVector" begin
+        H = create_cycle_matrix(8)
+        decoder = BPOTSDecoder(H, 0.01, 100; T=9, C=3.0)
+
+        # BitVector is a subtype of AbstractVector, not Vector{Bool}
+        error = zeros(Bool, 8)
+        error[1:2] .= true
+        syndrome_bitvec = BitVector(mod.(H * error, 2))
+
+        guess, converged = decode!(decoder, syndrome_bitvec)
+        decoded_syndrome = Bool.(mod.(H * guess, 2))
+        @test decoded_syndrome == Vector{Bool}(syndrome_bitvec)
     end
 end
