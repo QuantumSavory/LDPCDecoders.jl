@@ -220,9 +220,9 @@ function batchdecode!(decoder::BeliefPropagationDecoder, syndromes, errors)
   success::AbstractVector{Bool} = zeros(num_trials)
 
   for i in axes(syndromes, 2)
-    reset!(decoder)
-    success[i] = syndrome_decode!(decoder, decoder.scratch, syndromes[:, i])
-    errors[:, i] = decoder.scratch.err
+    guess, conv = decode!(decoder, syndromes[:, i])
+    success[i] = conv
+    errors[:, i] = guess
   end
 
   return errors, success
