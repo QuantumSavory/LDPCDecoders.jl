@@ -193,7 +193,6 @@ function batchdecode!(decoder::BitFlipDecoder, syndromes::AbstractMatrix, errors
   @views for i in axes(syndromes, 2)
     reset!(decoder)
     guess, conv = decode!(decoder, syndromes[:, i])
-    # guess, conv = syndrome_it_decode(decoder.sparse_H, syndromes[:, i], decoder.max_iters, decoder.scratch.err, decoder.scratch.votes)
     converged[i] = conv
     errors[:, i] .= guess
   end
