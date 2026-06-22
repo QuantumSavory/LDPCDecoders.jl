@@ -1,3 +1,19 @@
+"""
+    BeliefPropagationOSDDecoder(H::BitMatrix, per::Float64, max_iters::Int; osd_order::Int=0)
+
+Belief propagation decoder with Ordered Statistics Decoding (OSD) post-processing.
+
+Runs BP to get soft decisions (log-likelihood ratios), sorts parity check matrix columns
+by reliability, then applies Gaussian elimination on the unreliable columns to find a
+minimum-weight correction.
+
+# Arguments
+- `H::BitMatrix`: Parity check matrix.
+- `per::Float64`: Physical error rate.
+- `max_iters::Int`: Maximum BP iterations.
+- `osd_order::Int`: OSD post-processing order (default `0`). Higher values check more
+  candidate corrections but scale as `O(2^osd_order)`.
+"""
 struct BeliefPropagationOSDDecoder <: AbstractDecoder
     """A belief propagation decoder as a subroutine"""
     bp_decoder::BeliefPropagationDecoder
@@ -16,6 +32,17 @@ function rowswap!(H::BitMatrix, i, j)
     @inbounds H[i, :], H[j, :] = H[j, :], H[i, :] # TODO This could be further optimized?
 end
 
+"""
+    decode!(decoder::BeliefPropagationOSDDecoder, syndrome::AbstractVector)
+
+Decode `syndrome` using BP followed by OSD post-processing.
+
+Runs BP to obtain soft decisions, sorts columns of the parity check matrix by
+reliability, then applies Gaussian elimination on the least reliable columns
+to find a minimum-weight correction.
+
+Returns `(error_estimate, converged)` where `converged` indicates whether BP converged.
+"""
 function decode!(decoder::BeliefPropagationOSDDecoder, syndrome::AbstractVector)
     # use BP to get hard and soft decisions
     bp_err, converged = decode!(decoder.bp_decoder, syndrome) # hard decisions

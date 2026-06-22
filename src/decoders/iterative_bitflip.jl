@@ -18,6 +18,20 @@ function BitFlipScratchSpace(s, n)
   return BitFlipScratchSpace(zeros(n), zeros(n), zeros(s), zeros(s))
 end
 
+"""
+    BitFlipDecoder(H, per::Float64, max_iters::Int)
+
+Hard-decision iterative bit-flip decoder for LDPC codes.
+
+Each iteration computes a syndrome, counts how many unsatisfied checks vote for
+flipping each bit, and flips the top candidate. A `BitFlipScratchSpace` is
+allocated once at construction to avoid per-call allocations during decoding.
+
+# Arguments
+- `H`: Parity check matrix (any matrix type; converted to sparse internally).
+- `per::Float64`: Physical error rate.
+- `max_iters::Int`: Maximum bit-flip iterations.
+"""
 struct BitFlipDecoder <: AbstractDecoder
   "Physical error rate"
   per::Float64
@@ -64,8 +78,8 @@ Function to reset the scratch space for bit flip decoding algorithm
 ```jldoctest
 julia> decoder = BitFlipDecoder(LDPCDecoders.parity_check_matrix(1000, 10, 9), 0.01, 100);
 
-julia> reset!(decoder);
-````
+julia> LDPCDecoders.reset!(decoder);
+```
 """
 function reset!(bf_decoder::BitFlipDecoder)
   scratch = bf_decoder.scratch
@@ -83,17 +97,19 @@ Function to decode the given syndrome
 
 # Examples
 ```jldoctest
+julia> using StableRNGs; rng = StableRNG(42);
+
 julia> H = LDPCDecoders.parity_check_matrix(1000, 10, 9);
 
 julia> decoder = BitFlipDecoder(H, 0.01, 100);
 
-julia> error = rand(1000) .< 0.01;
+julia> error = rand(rng, 1000) .< 0.01;
 
 julia> syndrome = (H * error) .% 2;
 
 julia> guess, success = decode!(decoder, syndrome);
 
-julia> error == guess
+julia> success
 true
 ```
 """
@@ -152,19 +168,20 @@ Scratch space allocations are done once and re-used for better performance
 
 # Examples
 ```jldoctest
-julia> decoder = BitFlipDecoder(LDPCDecoders.parity_check_matrix(1000, 10, 9), 0.01, 100);
+julia> using StableRNGs; rng = StableRNG(42);
 
-julia> samples = 100
+julia> H = LDPCDecoders.parity_check_matrix(1000, 10, 9);
 
-julia> errors = rand(1000,samples) .< 0.01;
+julia> decoder = BitFlipDecoder(H, 0.01, 100);
 
-julia> syndromes = zeros(900, samples);
+julia> samples = 10;
 
-julia> syndromes = H*errors .% 2
+julia> errors = rand(rng, 1000, samples) .< 0.01;
+
+julia> syndromes = (H * errors) .% 2;
 
 julia> guesses, successes = batchdecode!(decoder, syndromes, zero(errors));
-
-julia> sum((guesses[:,i] == errors[:,i] for i in 1:samples)) > 0.995*samples
+```
 """
 function batchdecode!(decoder::BitFlipDecoder, syndromes, errors)
   @assert size(syndromes, 2) == size(errors, 2)

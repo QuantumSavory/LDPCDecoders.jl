@@ -14,7 +14,7 @@ permuted to create additional parity check n_equations
 
 # Examples
 ```julia
-julia> using LDPC
+julia> using LDPCDecoders
 julia> H = parity_check_matrix(1000, 10, 9)
 ```
 """

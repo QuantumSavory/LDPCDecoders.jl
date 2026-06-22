@@ -4,7 +4,7 @@ using SparseArrays
 
 using LDPCDecoders: syndrome_decode
 
-@testset "old LDPCDecoders tests caried over" begin
+@testset "old LDPCDecoders tests carried over" begin
     ## Syndrome decoding tests
     error_rate = 0.1
 

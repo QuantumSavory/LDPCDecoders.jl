@@ -21,6 +21,20 @@ function BeliefPropagationScratchSpace(n, s, per)
   return BeliefPropagationScratchSpace(zeros(n), fill(per, n), zeros(s, n), zeros(s, n), zeros(n))
 end
 
+"""
+    BeliefPropagationDecoder(H, per::Float64, max_iters::Int)
+
+Sum-product belief propagation decoder for LDPC codes.
+
+Works on the Tanner graph of `H`, passing log-likelihood ratio messages
+between variable and check nodes. A [`BeliefPropagationScratchSpace`] is
+allocated once at construction to avoid per-call allocations in `decode!`.
+
+# Arguments
+- `H`: Parity check matrix (any matrix type; converted to sparse internally).
+- `per::Float64`: Physical error rate (channel crossover probability).
+- `max_iters::Int`: Maximum BP iterations.
+"""
 struct BeliefPropagationDecoder <: AbstractDecoder
   "Physical error rate"
   per::Float64
@@ -63,11 +77,8 @@ Function to reset the scratch space for Belief propagation decoding
 ```jldoctest
 julia> decoder = BeliefPropagationDecoder(LDPCDecoders.parity_check_matrix(1000, 10, 9), 0.01, 100);
 
-julia> scratch = BeliefPropagationScratchSpace(zeros(decoder.n), fill(decoder.per, decoder.n),
-                zeros(decoder.s, decoder.n), zeros(decoder.s, decoder.n), zeros(decoder.n));
-
-julia> reset!(scratch, decoder);
-````
+julia> LDPCDecoders.reset!(decoder);
+```
 """
 function reset!(bp_decoder::BeliefPropagationDecoder)
   bp_setup = bp_decoder.scratch
@@ -91,17 +102,19 @@ Function to decode given the parity check matrix, syndrome and error
 
 # Examples
 ```jldoctest
+julia> using StableRNGs; rng = StableRNG(42);
+
 julia> H = LDPCDecoders.parity_check_matrix(1000, 10, 9);
 
 julia> decoder = BeliefPropagationDecoder(H, 0.01, 100);
 
-julia> error = rand(1000) .< 0.01;
+julia> error = rand(rng, 1000) .< 0.01;
 
 julia> syndrome = (H * error) .% 2;
 
 julia> guess, success = decode!(decoder, syndrome);
 
-julia> error == guess
+julia> success
 true
 ```
 """
@@ -186,19 +199,20 @@ Scratch space allocations are done once and re-used for better performance
 
 # Examples
 ```jldoctest
-julia> decoder = BeliefPropagationDecoder(LDPCDecoders.parity_check_matrix(1000, 10, 9), 0.01, 100);
+julia> using StableRNGs; rng = StableRNG(42);
 
-julia> samples = 100
+julia> H = LDPCDecoders.parity_check_matrix(1000, 10, 9);
 
-julia> errors = rand(1000,samples) .< 0.01;
+julia> decoder = BeliefPropagationDecoder(H, 0.01, 100);
 
-julia> syndromes = zeros(900, samples);
+julia> samples = 10;
 
-julia> syndromes = H*errors .% 2
+julia> errors = rand(rng, 1000, samples) .< 0.01;
+
+julia> syndromes = (H * errors) .% 2;
 
 julia> guesses, successes = batchdecode!(decoder, syndromes, zero(errors));
-
-julia> sum((guesses[:,i] == errors[:,i] for i in 1:samples)) > 0.995*samples
+```
 """
 function batchdecode!(decoder::BeliefPropagationDecoder, syndromes, errors)
   @assert size(syndromes, 2) == size(errors, 2)

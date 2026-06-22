@@ -24,7 +24,21 @@ mutable struct BPOTSState
 end
 
 
-# MAIN DECODER STRUCT
+"""
+    BPOTSDecoder(H, per::Float64, max_iters::Int; T::Int=9, C::Float64=2.0)
+
+Belief propagation decoder with Ordered Trapping Set (OTS) biasing.
+
+Detects oscillating variable nodes (trapping sets) that stall convergence and
+applies a corrective bias every `T` iterations, scaled by `C`, to get unstuck.
+
+# Arguments
+- `H`: Parity check matrix (`BitMatrix` or `SparseMatrixCSC{Bool,Int}`).
+- `per::Float64`: Physical error rate.
+- `max_iters::Int`: Maximum BP iterations.
+- `T::Int`: Biasing period (default `9`).
+- `C::Float64`: Bias constant (default `2.0`).
+"""
 struct BPOTSDecoder <: AbstractDecoder
     per::Float64        # Physical error rate (probability of a qubit error)
     max_iters::Int      # Maximum # of iterations before giving up
@@ -217,6 +231,16 @@ end
 
 
 
+"""
+    decode!(decoder::BPOTSDecoder, syndrome::Vector{Bool})
+
+Decode `syndrome` using BP with Ordered Trapping Set biasing.
+
+Runs BP message passing and periodically biases oscillating variable nodes
+every `T` iterations to break out of trapping sets.
+
+Returns `(error_estimate, converged)`.
+"""
 # DECODE (MAIN ALGORITHM)
 function decode!(decoder::BPOTSDecoder, syndrome::Vector{Bool})
     state = decoder.scratch
