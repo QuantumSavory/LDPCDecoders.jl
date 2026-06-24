@@ -1,4 +1,4 @@
-function bp_simulate(parity_check_matrix, generator_matrix, error_rate, max_trials)
+function bp_simulate(parity_check_matrix::AbstractMatrix, generator_matrix::AbstractMatrix, error_rate::Float64, max_trials::Int)
 
   # Get size of parity check matrix
   num_checks, num_bits = size(parity_check_matrix)
@@ -39,7 +39,7 @@ function bp_simulate(parity_check_matrix, generator_matrix, error_rate, max_tria
     # syndrome = (pcm * error) .% 2
 
     # Belief propagation decoder
-    decoded_message, success = bp_decode(received_message, parity_check_matrix, 0.1)
+    decoded_message, success = bp_decode(parity_check_matrix, received_message, error_rate)
     println("decoded message = ", decoded_message)
     display(decoded_message)
     if decoded_message == code
