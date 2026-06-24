@@ -1,7 +1,6 @@
+@testitem "BPOSD Decoder" begin
 using Test
 using LDPCDecoders
-
-@testset "test_bposd_decoder.jl" begin
 
   """Test for BP-OSD decoder"""
   function test_bposd_decoder()

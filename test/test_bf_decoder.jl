@@ -1,7 +1,6 @@
+@testitem "BitFlip Decoder" begin
 using Test
 using LDPCDecoders
-
-@testset "test_bf_decoder.jl" begin
 
   """Test for bitflip decoder"""
   function test_bf_decoder()

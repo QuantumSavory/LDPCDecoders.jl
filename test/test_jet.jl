@@ -1,10 +1,10 @@
+@testitem "JET checks" tags=[:jet] begin
 using LDPCDecoders
 using JET
 using Test
 
 import LinearAlgebra, DelimitedFiles
 
-@testset "JET checks" begin
     rep = report_package("LDPCDecoders";
         ignored_modules=(
             AnyFrameModule(LinearAlgebra),
