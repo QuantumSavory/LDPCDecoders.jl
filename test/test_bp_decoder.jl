@@ -1,7 +1,6 @@
+@testitem "BP Decoder" begin
 using Test
 using LDPCDecoders
-
-@testset "test_bp_decoder.jl" begin
 
   """Test for belief propagation decoder"""
   function test_bp_decoder()

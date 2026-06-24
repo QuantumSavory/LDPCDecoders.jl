@@ -9,7 +9,7 @@ function phi(message)
 end
 
 # Calculate estimate
-function estimate(message_c2v, num_vs, num_cs, vllr, parity_check_matrix)
+function estimate(message_c2v::AbstractMatrix, num_vs::Int, num_cs::Int, vllr::AbstractVector, parity_check_matrix::AbstractMatrix)
   estimate = zeros(num_vs)
   for v in 1:num_vs
     estimate[v] += vllr[v]
@@ -72,7 +72,7 @@ end
 
 
 # Belief Propagation Decoder
-function bp_decode(parity_check_matrix, received_message, error_rate, max_iterations=100)
+function bp_decode(parity_check_matrix::AbstractMatrix, received_message::AbstractVector, error_rate::Float64, max_iterations::Int=100)
 
   num_checks, num_bits = size(parity_check_matrix)
   num_edges = sum(parity_check_matrix)
@@ -84,6 +84,7 @@ function bp_decode(parity_check_matrix, received_message, error_rate, max_iterat
 
   # Initialize check messages
   message_c2v = zeros(num_checks, num_bits)
+  syndrome = zeros(Int, num_checks)
   initialise_checks!(parity_check_matrix, message_c2v, syndrome, num_vs, num_cs)
 
   # Initialize llr for variable nodes
@@ -93,7 +94,6 @@ function bp_decode(parity_check_matrix, received_message, error_rate, max_iterat
   send_variable_message!(parity_check_matrix, message_c2v, message_v2c, num_checks, num_bits, vllr)
 
   local decoded
-  local syndrome
 
   for iter in 1:max_iterations
 

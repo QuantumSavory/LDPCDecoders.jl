@@ -1,3 +1,4 @@
+@testitem "BP-OTS Decoder" begin
 #BPOTS Tests
 
 using Test
@@ -9,7 +10,6 @@ import LDPCDecoders: BPOTSDecoder, BeliefPropagationDecoder, decode!, reset!
 #= 
 Tests syndrome matching
 =#
-@testset "Comprehensive BP-OTS Decoder Tests" begin
      # Utility functions
      function create_cycle_matrix(n::Int)
          I_idx = Int[]

@@ -1,10 +1,10 @@
+@testitem "Old LDPCDecoders tests" begin
 using LDPCDecoders
 using Test
 using SparseArrays
 
 using LDPCDecoders: syndrome_decode
 
-@testset "old LDPCDecoders tests carried over" begin
     ## Syndrome decoding tests
     error_rate = 0.1
 
