@@ -9,32 +9,40 @@ subtype `AbstractDecoder` and must implement [`decode!`](@ref).
 abstract type AbstractDecoder end
 
 """
-    batchdecode!(decoder::AbstractDecoder, syndromes, errors)
+    batchdecode!(decoder::AbstractDecoder, syndromes::AbstractMatrix, errors::AbstractMatrix, [converged::AbstractVector{Bool}])
 
-Decode every column of `syndromes` with `decoder`, writing the guesses into
-`errors` column-by-column.
+Decode each column of `syndromes` with `decoder`, writing the results into the
+corresponding column of `errors`.
 
-This generic fallback works for any `AbstractDecoder` that implements
-[`decode!`](@ref).  Individual decoders may override it if a more efficient
-batch strategy exists.
+This is the generic fallback for any `AbstractDecoder` that implements
+[`decode!`](@ref). Individual decoders can override it with a faster batch
+strategy.
 
 # Arguments
 - `decoder`: Any concrete `AbstractDecoder`.
 - `syndromes`: Matrix whose columns are the syndromes to decode.
-- `errors`: Pre-allocated matrix (same column count); overwritten with guesses.
+- `errors`: Pre-allocated matrix (same column count); overwritten with results.
+- `converged`: Optional pre-allocated boolean vector. When provided, the function runs with zero allocations.
 
-Returns `(errors, converged)` where `converged` is a `Vector{Bool}`.
+Returns `(errors, converged)`. The `converged[i]` is `true` if the decoder found
+an error estimate whose syndrome matches `syndromes[:, i]` within the iteration
+limit, and `false` otherwise.
 """
-function batchdecode!(decoder::AbstractDecoder, syndromes, errors)
+function batchdecode!(decoder::AbstractDecoder, syndromes::AbstractMatrix, errors::AbstractMatrix, converged::AbstractVector{Bool})
     @assert size(syndromes, 2) == size(errors, 2)
-    num_trials = size(syndromes, 2)
-    converged = Vector{Bool}(undef, num_trials)
+    @assert size(syndromes, 2) == length(converged)
 
-    for i in axes(syndromes, 2)
+    @views for i in axes(syndromes, 2)
         guess, conv = decode!(decoder, syndromes[:, i])
         converged[i] = conv
-        errors[:, i] = guess
+        errors[:, i] .= guess
     end
 
     return errors, converged
+end
+
+function batchdecode!(decoder::AbstractDecoder, syndromes::AbstractMatrix, errors::AbstractMatrix)
+    num_trials = size(syndromes, 2)
+    converged = Vector{Bool}(undef, num_trials)
+    return batchdecode!(decoder, syndromes, errors, converged)
 end
