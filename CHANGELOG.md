@@ -12,6 +12,7 @@
 - Add docstrings to all public types and methods
 - Fix pre-existing docstring bugs (broken code blocks, undefined variables)
 - Clean up outdated developer comments and TODOs across the codebase
+- Remove 10 deprecated/legacy decoder files (superseded by modern API) and old examples
 
 ## v0.3.3 - 2025-04-15
 
