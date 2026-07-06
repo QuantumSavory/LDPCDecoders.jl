@@ -46,7 +46,24 @@ using LDPCDecoders
     return syn == (H * guess) .% 2
   end
 
+  """Test for batch BP-OSD decoder (uses generic batchdecode! from AbstractDecoder)"""
+  function test_bposd_decoder_batch()
+    H = LDPCDecoders.parity_check_matrix(1000, 10, 9)
+    per = 0.01
+    num_trials = 10
+    errors = rand(1000, num_trials) .< per
+    syndromes = (H * errors) .% 2
+    bposd = BeliefPropagationOSDDecoder(H, per, 100)
+    guesses, successes = batchdecode!(bposd, syndromes, zero(errors))
+    # OSD guarantees syndrome consistency even when exact decoding fails
+    for i in 1:num_trials
+      @test (H * guesses[:, i]) .% 2 == syndromes[:, i]
+    end
+    return true
+  end
+
   @test test_bposd_decoder()
   @test test_bposd_decoder_high_order()
   @test test_bposd_decoder_large_error_rate()
+  @test test_bposd_decoder_batch()
 end

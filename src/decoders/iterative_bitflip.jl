@@ -165,6 +165,9 @@ Scratch space allocations are done once and re-used for better performance
 * `decoder`: The Bit flip decoder configuration
 * `syndromes`: Syndrome matrix that contains batch syndromes
 * `errors`: Predefined error matrix that this function manipulates
+* `converged`: Optional pre-allocated boolean vector. If provided, `batchdecode!` will execute with zero allocations.
+
+Returns `(errors, converged)`. The `converged` vector represents whether the decoder succeeded: its i-th element is `true` if the decoder found an error estimate whose syndrome matches the i-th input syndrome within the maximum number of iterations, and `false` otherwise.
 
 # Examples
 ```jldoctest
@@ -183,18 +186,19 @@ julia> syndromes = (H * errors) .% 2;
 julia> guesses, successes = batchdecode!(decoder, syndromes, zero(errors));
 ```
 """
-function batchdecode!(decoder::BitFlipDecoder, syndromes, errors)
+function batchdecode!(decoder::BitFlipDecoder, syndromes::AbstractMatrix, errors::AbstractMatrix, converged::AbstractVector{Bool})
   @assert size(syndromes, 2) == size(errors, 2)
-  num_trials::Int = size(syndromes, 2)
-  converged::AbstractVector{Bool} = zeros(num_trials)
+  @assert size(syndromes, 2) == length(converged)
 
-  for i in axes(syndromes, 2)
+  @views for i in axes(syndromes, 2)
     reset!(decoder)
     guess, conv = decode!(decoder, syndromes[:, i])
     # guess, conv = syndrome_it_decode(decoder.sparse_H, syndromes[:, i], decoder.max_iters, decoder.scratch.err, decoder.scratch.votes)
     converged[i] = conv
-    errors[:, i] = guess
+    errors[:, i] .= guess
   end
 
   return errors, converged
 end
+
+

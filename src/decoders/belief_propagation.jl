@@ -196,6 +196,9 @@ Scratch space allocations are done once and re-used for better performance
 * `decoder`: The Belief Propagation decoder configuration
 * `syndromes`: Syndrome matrix that contains batch syndromes
 * `errors`: Predefined error matrix that this function manipulates
+* `success`: Optional pre-allocated boolean vector. If provided, `batchdecode!` will execute with zero allocations.
+
+Returns `(errors, success)`. The `success` vector represents whether the decoder succeeded: its i-th element is `true` if the decoder found an error estimate whose syndrome matches the i-th input syndrome within the maximum number of iterations, and `false` otherwise.
 
 # Examples
 ```jldoctest
@@ -214,16 +217,17 @@ julia> syndromes = (H * errors) .% 2;
 julia> guesses, successes = batchdecode!(decoder, syndromes, zero(errors));
 ```
 """
-function batchdecode!(decoder::BeliefPropagationDecoder, syndromes, errors)
+function batchdecode!(decoder::BeliefPropagationDecoder, syndromes::AbstractMatrix, errors::AbstractMatrix, success::AbstractVector{Bool})
   @assert size(syndromes, 2) == size(errors, 2)
-  num_trials::Int = size(syndromes, 2)
-  success::AbstractVector{Bool} = zeros(num_trials)
+  @assert size(syndromes, 2) == length(success)
 
-  for i in axes(syndromes, 2)
-    reset!(decoder)
-    success[i] = syndrome_decode!(decoder, decoder.scratch, syndromes[:, i])
-    errors[:, i] = decoder.scratch.err
+  @views for i in axes(syndromes, 2)
+    guess, conv = decode!(decoder, syndromes[:, i])
+    success[i] = conv
+    errors[:, i] .= guess
   end
 
   return errors, success
 end
+
+
