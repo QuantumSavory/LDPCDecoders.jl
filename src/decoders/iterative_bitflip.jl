@@ -201,8 +201,4 @@ function batchdecode!(decoder::BitFlipDecoder, syndromes::AbstractMatrix, errors
   return errors, converged
 end
 
-function batchdecode!(decoder::BitFlipDecoder, syndromes::AbstractMatrix, errors::AbstractMatrix)
-  num_trials::Int = size(syndromes, 2)
-  converged = Vector{Bool}(undef, num_trials)
-  return batchdecode!(decoder, syndromes, errors, converged)
-end
+

@@ -230,8 +230,4 @@ function batchdecode!(decoder::BeliefPropagationDecoder, syndromes::AbstractMatr
   return errors, success
 end
 
-function batchdecode!(decoder::BeliefPropagationDecoder, syndromes::AbstractMatrix, errors::AbstractMatrix)
-  num_trials::Int = size(syndromes, 2)
-  success = Vector{Bool}(undef, num_trials)
-  return batchdecode!(decoder, syndromes, errors, success)
-end
+
