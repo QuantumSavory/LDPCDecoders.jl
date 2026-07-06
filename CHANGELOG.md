@@ -11,6 +11,7 @@
 - Set up Documenter.jl docs page with API reference and decoder guides
 - Add docstrings to all public types and methods
 - Fix pre-existing docstring bugs (broken code blocks, undefined variables)
+- Clean up outdated developer comments and TODOs across the codebase
 
 ## v0.3.3 - 2025-04-15
 

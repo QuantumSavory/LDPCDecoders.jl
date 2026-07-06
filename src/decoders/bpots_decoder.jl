@@ -357,29 +357,3 @@ function decode!(decoder::BPOTSDecoder, syndrome::AbstractVector)
     
     return state.best_decisions, false
 end
-
-
-#=
-
-Added pre-allocated buffers to the BPOTSState struct instead of creating new arrays in each iteration
-    Added Π and Ω vectors for beliefs (previously created in each decode! call)
-    Added decisions and llrs vectors (previously created in each iteration)
-    Added best_decisions vector (previously created and copied)
-    Added check_result and int_check_result for syndrome checking
-
-Added Pre-computed Neighbor Lists
-    var_neighbors: Pre-computed lists of check nodes connected to each variable
-    check_neighbors: Pre-computed lists of variable nodes connected to each check
-This eliminated repeated calls to get_variable_neighbors() and get_check_neighbors(), which were creating new arrays on each call.
-
-Used .= for assignments instead of = or copy()
-Used fill!() to reset arrays rather than creating new ones
-Used mul!() for matrix multiplication instead of the * operator  
-    (Added an integer buffer for intermediate results, Applied modulo 2 operation explicitly to avoid Boolean conversion errors)
-    Since when you multiply a Boolean sparse matrix (decoder.sparse_H) with an integer vector (state.decisions), the result can be greater than 1, and trying bool(2) gives an error.
-
-Replaced findall() and argmin() with direct iteration ()
-
-Modified compute_beliefs! to update pre-allocated buffers
-
-=#

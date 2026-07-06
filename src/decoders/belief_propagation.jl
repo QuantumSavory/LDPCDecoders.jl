@@ -90,7 +90,7 @@ function reset!(bp_decoder::BeliefPropagationDecoder)
   bp_decoder
 end
 
-# TODO: Belief decoder type, syndrome, error -> should be modified
+
 
 """
 Function to decode given the parity check matrix, syndrome and error
@@ -118,7 +118,7 @@ julia> success
 true
 ```
 """
-function decode!(decoder::BeliefPropagationDecoder, syndrome::AbstractVector) # TODO check if casting to bitarrays helps with performance -- if it does, set up warnings to the user for cases where they have not done the casting
+function decode!(decoder::BeliefPropagationDecoder, syndrome::AbstractVector)
   reset!(decoder)
   rows::Vector{Int} = rowvals(decoder.sparse_H);
   rowsT::Vector{Int} = rowvals(decoder.sparse_HT);
