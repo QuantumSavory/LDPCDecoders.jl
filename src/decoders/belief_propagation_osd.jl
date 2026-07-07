@@ -56,15 +56,14 @@ function decode!(decoder::BeliefPropagationOSDDecoder, syndrome::AbstractVector)
     H_sorted = decoder.H[:, sort_by_reliability]
     bp_err_sorted = bp_err[sort_by_reliability]
     # OSD-0 is handled via a fast shortcut (Algorithm 2 in https://doi.org/10.22331/q-2021-11-22-585) inside osd()
-    err = osd(H_sorted, syndrome, bp_err_sorted, decoder.osd_order)
+    err = osd(H_sorted, syndrome, bp_err_sorted, Val(decoder.osd_order))
     return err[invperm(sort_by_reliability)], converged # also return whether BP is converged
 end
 
-function osd(H, syndrome, bp_err, osd_order)
+function osd(H, syndrome, bp_err, ::Val{0})
     m, n = size(H)
     
-    if osd_order == 0
-        s_target = Bool.(syndrome)
+    s_target = Bool.(syndrome)
         for j in 1:n
             if bp_err[j] == 1
                 s_target .⊻= H[:, j]
@@ -123,7 +122,11 @@ function osd(H, syndrome, bp_err, osd_order)
         end
         
         return correction
-    end
+end
+
+function osd(H, syndrome, bp_err, ::Val{O}) where {O}
+    osd_order = O
+    m, n = size(H)
 
     # diagnolize the submatrix corresponding to independent columns via Gaussian elimination
     # first obtain the row canonical form
