@@ -12,6 +12,8 @@
 - Add docstrings to all public types and methods
 - Fix pre-existing docstring bugs (broken code blocks, undefined variables)
 - Add benchmark suite (`benchmark/benchmarks.jl`) for AirspeedVelocity CI
+- Implement OSD-0 fast shortcut (Algorithm 2 from Panteleev & Kalachev) for BP-OSD decoder
+- Fix `rowswap!` to use zero-allocation element-wise swap instead of slice-based copy
 - Clean up outdated developer comments and TODOs across the codebase
 - Remove 10 deprecated/legacy decoder files (superseded by modern API) and old examples
 - Finalize legacy cleanup by completely removing unused syndrome decoders and generator
