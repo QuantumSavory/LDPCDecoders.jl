@@ -13,6 +13,7 @@
 - Fix pre-existing docstring bugs (broken code blocks, undefined variables)
 - Add benchmark suite (`benchmark/benchmarks.jl`) for AirspeedVelocity CI
 - Add BP-OTS `decode!` benchmark for tracking message-passing performance
+- Fix BP-OTS decoder and benchmark script to correctly handle integer syndromes
 - Implement OSD-0 fast shortcut (Algorithm 2 from Panteleev & Kalachev) for BP-OSD decoder
 - Fix `rowswap!` to use zero-allocation element-wise swap instead of slice-based copy
 - Clean up outdated developer comments and TODOs across the codebase
