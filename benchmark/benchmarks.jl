@@ -8,7 +8,7 @@ const SUITE = BenchmarkGroup()
 H = LDPCDecoders.parity_check_matrix(1000, 10, 9)
 per = 0.01
 err = rand(1000) .< per
-syn = (H * err) .% 2
+syn = Bool.((H * err) .% 2)
 
 # ── BP-OSD decode! ───────────────────────────────────────────────────────────
 

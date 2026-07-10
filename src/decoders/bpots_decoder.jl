@@ -212,7 +212,7 @@ function update_check_to_variable!(decoder::BPOTSDecoder, state::BPOTSState, i::
     end
     
     # Apply syndrome as in Equation (2)
-    if syndrome[i]
+    if !iszero(syndrome[i])
         prod_tanh = -prod_tanh
     end
     
