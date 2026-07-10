@@ -28,8 +28,11 @@ function BeliefPropagationOSDDecoder(H::BitMatrix, per::Float64, max_iters::Int;
     return BeliefPropagationOSDDecoder(bp_decoder, H, osd_order)
 end
 
-function rowswap!(H::BitMatrix, i, j)
-    @inbounds H[i, :], H[j, :] = H[j, :], H[i, :] # TODO This could be further optimized?
+function rowswap!(H::AbstractMatrix, i, j)
+    i == j && return
+    @inbounds for col in axes(H, 2)
+        H[i, col], H[j, col] = H[j, col], H[i, col]
+    end
 end
 
 """
@@ -52,13 +55,79 @@ function decode!(decoder::BeliefPropagationOSDDecoder, syndrome::AbstractVector)
     sort_by_reliability = sortperm(max.(bp_probabs, 1 .- bp_probabs), rev=true)
     H_sorted = decoder.H[:, sort_by_reliability]
     bp_err_sorted = bp_err[sort_by_reliability]
-    # TODO an optimized version of OSD can be implemented when osd_order = 0, see Algorithm 2 in	https://doi.org/10.22331/q-2021-11-22-585
-    err = osd(H_sorted, syndrome, bp_err_sorted, decoder.osd_order)
+    # OSD-0 is handled via a fast shortcut (Algorithm 2 in https://doi.org/10.22331/q-2021-11-22-585) inside osd()
+    err = osd(H_sorted, syndrome, bp_err_sorted, Val(decoder.osd_order))
     return err[invperm(sort_by_reliability)], converged # also return whether BP is converged
 end
 
-function osd(H, syndrome, bp_err, osd_order)
+function osd(H, syndrome, bp_err, ::Val{0})
     m, n = size(H)
+    
+    s_target = Bool.(syndrome)
+        for j in 1:n
+            if bp_err[j] == 1
+                s_target .⊻= H[:, j]
+            end
+        end
+        if !any(s_target)
+            return Bool.(bp_err)
+        end
+        
+        H_work = copy(H)
+        least_reliable_rows = Int[]
+        least_reliable_cols = Int[]
+        i = 1
+        
+        for j in 1:n
+            if i > m || !any(@view s_target[i:m])
+                break
+            end
+            
+            k = findfirst(@view H_work[i:m, j])
+            if !isnothing(k)
+                if bp_err[j] == 1
+                    s_target .⊻= H_work[:, j]
+                end
+                
+                if k > 1
+                    ii = i + k - 1
+                    rowswap!(H_work, i, ii)
+                    s_target[i], s_target[ii] = s_target[ii], s_target[i]
+                end
+                
+                for ii in i+1:m
+                    if H_work[ii, j]
+                        H_work[ii, :] .⊻= H_work[i, :]
+                        s_target[ii] ⊻= s_target[i]
+                    end
+                end
+                
+                push!(least_reliable_rows, i)
+                push!(least_reliable_cols, j)
+                i += 1
+            end
+        end
+        
+        correction = Bool.(copy(bp_err))
+        for (idx, r) in enumerate(reverse(least_reliable_rows))
+            c = least_reliable_cols[end - idx + 1]
+            correction[c] = s_target[r]
+            if correction[c]
+                for ii in 1:r-1
+                    if H_work[ii, c]
+                        s_target[ii] ⊻= true
+                    end
+                end
+            end
+        end
+        
+        return correction
+end
+
+function osd(H, syndrome, bp_err, ::Val{O}) where {O}
+    osd_order = O
+    m, n = size(H)
+
     # diagnolize the submatrix corresponding to independent columns via Gaussian elimination
     # first obtain the row canonical form
     # and find least reliable indices, i.e., the first r pivot columns (assume H is rearranged by reliability)
