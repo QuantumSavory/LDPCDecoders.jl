@@ -19,6 +19,7 @@
 - Clean up outdated developer comments and TODOs across the codebase
 - Remove 10 deprecated/legacy decoder files (superseded by modern API) and old examples
 - Finalize legacy cleanup by completely removing unused syndrome decoders and generator
+- Replace `Dict{Tuple{Int,Int}, Float64}` message storage in BP-OTS with dense `Matrix{Float64}` for zero-hashing message passing
 
 ## v0.3.3 - 2025-04-15
 
