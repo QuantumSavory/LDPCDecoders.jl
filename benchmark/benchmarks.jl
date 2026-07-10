@@ -29,3 +29,9 @@ SUITE["bp"]["decode"] = @benchmarkable decode!(d, s) setup=(d=deepcopy($bp_decod
 SUITE["bitflip"] = BenchmarkGroup(["bitflip"])
 bf_decoder = BitFlipDecoder(H, per, 100)
 SUITE["bitflip"]["decode"] = @benchmarkable decode!(d, s) setup=(d=deepcopy($bf_decoder); s=copy($syn)) evals=1
+
+# ── BP-OTS decode! ───────────────────────────────────────────────────────────
+
+SUITE["bpots"] = BenchmarkGroup(["bpots"])
+bpots_decoder = BPOTSDecoder(BitMatrix(Matrix(H)), per, 100; T=9, C=2.0)
+SUITE["bpots"]["decode"] = @benchmarkable decode!(d, s) setup=(d=deepcopy($bpots_decoder); s=copy($syn)) evals=1
