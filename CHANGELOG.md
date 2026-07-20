@@ -19,6 +19,7 @@
 - Clean up outdated developer comments and TODOs across the codebase
 - Remove 10 deprecated/legacy decoder files (superseded by modern API) and old examples
 - Finalize legacy cleanup by completely removing unused syndrome decoders and generator
+- Add a read-only organization audit for Documenter deployment setup and enable pull-request documentation previews
 
 ## v0.3.3 - 2025-04-15
 
