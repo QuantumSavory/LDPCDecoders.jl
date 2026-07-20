@@ -6,8 +6,8 @@ using SparseArrays
 The mutable struct stores the computational state during decoding.    
 =#
 mutable struct BPOTSState
-    messages_vc::Dict{Tuple{Int,Int}, Float64}
-    messages_cv::Dict{Tuple{Int,Int}, Float64}
+    messages_vc::Matrix{Float64}
+    messages_cv::Matrix{Float64}
     oscillations::Vector{Int}
     biased_nodes::Set{Int}
     prior_decisions::Vector{Int}
@@ -59,23 +59,12 @@ end
 # BP-OTS STATE INITIALIZATION
 # This creates the initial computational state for the BP-OTS algorithm
 function initialize_bpots_state(H::SparseMatrixCSC, n::Int)
-    # Initializing 2 variables to store messages that flow through the Tanner graph
-    messages_vc = Dict{Tuple{Int,Int}, Float64}()
-    messages_cv = Dict{Tuple{Int,Int}, Float64}()
-    
-    # Initialize messages with small random values
-    rows = rowvals(H)
-    vals = nonzeros(H)
-    
-    for j in 1:size(H,2)
-        for idx in nzrange(H, j)
-            i = rows[idx]
-            if vals[idx]
-                messages_vc[(j,i)] = 0.0
-                messages_cv[(i,j)] = 0.0
-            end
-        end
-    end
+    s = size(H, 1)
+    # Dense matrices for message storage — indexed as mat[check, var]
+    # Only positions where H has nonzeros carry meaningful messages;
+    # the adjacency lists in the decoder restrict iteration to those positions.
+    messages_vc = zeros(Float64, s, n)
+    messages_cv = zeros(Float64, s, n)
 
     return BPOTSState(
         messages_vc,
@@ -89,8 +78,8 @@ function initialize_bpots_state(H::SparseMatrixCSC, n::Int)
         zeros(Int, n),     # decisions
         zeros(Float64, n), # llrs
         zeros(Int, n),     # best_decisions
-        zeros(Bool, size(H, 1)), # check_result
-        zeros(Int, size(H, 1))   # int_check_result (new buffer)
+        zeros(Bool, s),    # check_result
+        zeros(Int, s)      # int_check_result
     )
 end
 
@@ -141,9 +130,7 @@ function compute_beliefs!(decoder::BPOTSDecoder, state::BPOTSState, Ω::Vector{F
         # Sum all incoming messages for this variable node
         llr = Ω[j]  # Start with prior belief or bias
         for i in decoder.var_neighbors[j]
-            if haskey(state.messages_cv, (i,j))
-                llr += state.messages_cv[(i,j)]
-            end
+            llr += state.messages_cv[i, j]
         end
         state.llrs[j] = llr
         
@@ -164,12 +151,8 @@ function reset!(decoder::BPOTSDecoder)
     fill!(state.prior_llrs, 0) # clears previous llrs
     
     # Reset messages to neutral values
-    for k in keys(state.messages_vc)
-        state.messages_vc[k] = 0.0
-    end
-    for k in keys(state.messages_cv)
-        state.messages_cv[k] = 0.0
-    end
+    fill!(state.messages_vc, 0.0)
+    fill!(state.messages_cv, 0.0)
     
     return decoder
 end
@@ -183,14 +166,13 @@ function update_variable_to_check!(decoder::BPOTSDecoder, state::BPOTSState, j::
     msg_sum = 0.0
     for check in decoder.var_neighbors[j]
         if check != i  # Skip the target check node i
-            msg = get(state.messages_cv, (check,j), 0.0)
-            msg_sum += msg
+            msg_sum += state.messages_cv[check, j]
         end
     end
     
     # Add prior and store
     msg = Ω[j] + msg_sum
-    state.messages_vc[(j,i)] = msg
+    state.messages_vc[i, j] = msg
 end
 
 
@@ -204,8 +186,7 @@ function update_check_to_variable!(decoder::BPOTSDecoder, state::BPOTSState, i::
     
     for var in decoder.check_neighbors[i]
         if var != j  # Skip the target variable node j
-            msg = get(state.messages_vc, (var,i), 0.0)
-            t = tanh(0.5 * msg)
+            t = tanh(0.5 * state.messages_vc[i, var])
             t = min(MAX_TANH, max(-MAX_TANH, t))
             prod_tanh *= t
         end
@@ -226,7 +207,7 @@ function update_check_to_variable!(decoder::BPOTSDecoder, state::BPOTSState, i::
     MAX_MSG = 100.0
     msg = min(MAX_MSG, max(-MAX_MSG, msg))
 
-    state.messages_cv[(i,j)] = msg
+    state.messages_cv[i, j] = msg
 end
 
 
