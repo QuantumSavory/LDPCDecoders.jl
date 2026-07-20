@@ -23,4 +23,5 @@ makedocs(
 
 deploydocs(
     repo = "github.com/QuantumSavory/LDPCDecoders.jl.git",
+    push_preview = true,
 )
