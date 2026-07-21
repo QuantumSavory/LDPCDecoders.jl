@@ -5,7 +5,8 @@ using Test
 
 import LinearAlgebra, DelimitedFiles
 
-    rep = report_package("LDPCDecoders";
+    rep = report_package(LDPCDecoders;
+        target_modules=(LDPCDecoders,),
         ignored_modules=(
             AnyFrameModule(LinearAlgebra),
             AnyFrameModule(DelimitedFiles),
@@ -13,6 +14,5 @@ import LinearAlgebra, DelimitedFiles
         )
     )
     @show rep
-    @test length(JET.get_reports(rep)) <= 5
-    @test_broken length(JET.get_reports(rep)) == 0
+    @test length(JET.get_reports(rep)) == 0
 end
