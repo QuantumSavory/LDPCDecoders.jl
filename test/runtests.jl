@@ -1,10 +1,14 @@
 # Optional test flags
-JET_flag = get(ENV, "JET_TEST", "") == "true"
+JET_flag = ARGS == ["jet"]
 
-JET_flag && @info "Running with JET tests."
-
-using Pkg
-JET_flag && Pkg.add("JET")
+if JET_flag
+  @info "Running JET tests in their dedicated test environment."
+  using Pkg
+  Pkg.activate(joinpath(@__DIR__, "projects", "jet"))
+  Pkg.instantiate()
+else
+  @info "Skipping JET tests -- pass `test_args=[\"jet\"]` to Pkg.test to enable them."
+end
 
 using TestItemRunner
 using LDPCDecoders
