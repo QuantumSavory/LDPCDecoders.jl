@@ -1,0 +1,14 @@
+[deps]
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
+LDPCDecoders = "3c486d74-64b9-4c60-8b1a-13a564e77efb"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+TestItemRunner = "f8b46487-2199-4994-9208-9a1283c18c0a"
+
+[sources]
+LDPCDecoders = {path = "../../.."}
+
+[compat]
+TestItemRunner = "0.2.3, 1"
