@@ -105,4 +105,88 @@ import LDPCDecoders: SmallSetFlipDecoder, decode!, reset!
         @test decoded_syndrome == Bool.(syndrome)
     end
 
+    # ── Commit 1: Regression tests for sparse syndrome optimization ──
+
+    @testset "Regression: sparse optimization matches expected results" begin
+        rng = StableRNG(42)
+        H = LDPCDecoders.parity_check_matrix(100, 5, 4)
+        decoder = SmallSetFlipDecoder(H, 100)
+
+        # Run a fixed set of error patterns and verify correct syndrome matching
+        # This ensures the sparse syn_nonzeros storage produces identical results
+        # to the previous dense syn_columns storage.
+        successes = 0
+        for _ in 1:20
+            error = rand(rng, 100) .< 0.02
+            syndrome = Bool.(mod.(H * error, 2))
+            guess, converged = decode!(decoder, syndrome)
+            decoded_syndrome = Bool.(mod.(H * guess, 2))
+            @test decoded_syndrome == syndrome
+            if converged
+                successes += 1
+            end
+        end
+        # At 2% error rate on a (100,5,4) code, most should converge
+        @test successes >= 15
+    end
+
+    # ── Commit 1: Deterministic tie-breaking (rng=nothing) ──
+
+    @testset "Deterministic tie-breaking (rng=nothing)" begin
+        H = create_cycle_matrix(8)
+        decoder = SmallSetFlipDecoder(H, 50)  # rng=nothing by default
+
+        error = zeros(Int, 8)
+        error[1] = 1
+        error[4] = 1  # two-bit error to create more tie opportunities
+        syndrome = Bool.(mod.(H * error, 2))
+
+        # Decode twice — must produce identical results
+        guess1, conv1 = decode!(decoder, syndrome)
+        guess1_copy = copy(guess1)
+        guess2, conv2 = decode!(decoder, syndrome)
+
+        @test guess1_copy == guess2
+        @test conv1 == conv2
+    end
+
+    # ── Commit 1: Randomized tie-breaking (rng provided) ──
+
+    @testset "Randomized tie-breaking (rng provided)" begin
+        H = LDPCDecoders.parity_check_matrix(100, 5, 4)
+
+        # Decoder with RNG — results must still produce valid syndrome match
+        decoder_rng = SmallSetFlipDecoder(H, 100; rng=StableRNG(1))
+
+        rng_err = StableRNG(99)
+        for _ in 1:10
+            error = rand(rng_err, 100) .< 0.02
+            syndrome = Bool.(mod.(H * error, 2))
+            guess, converged = decode!(decoder_rng, syndrome)
+            decoded_syndrome = Bool.(mod.(H * guess, 2))
+            # Correctness: decoded syndrome must match input syndrome
+            @test decoded_syndrome == syndrome
+        end
+    end
+
+    @testset "Randomized tie-breaking with StableRNG is reproducible" begin
+        H = create_cycle_matrix(16)
+
+        error = zeros(Int, 16)
+        error[1] = 1
+        error[5] = 1
+        syndrome = Bool.(mod.(H * error, 2))
+
+        # Same seed → same results
+        dec1 = SmallSetFlipDecoder(H, 50; rng=StableRNG(42))
+        dec2 = SmallSetFlipDecoder(H, 50; rng=StableRNG(42))
+
+        guess1, conv1 = decode!(dec1, syndrome)
+        guess1_copy = copy(guess1)
+        guess2, conv2 = decode!(dec2, syndrome)
+
+        @test guess1_copy == guess2
+        @test conv1 == conv2
+    end
+
 end

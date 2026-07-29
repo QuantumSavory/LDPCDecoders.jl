@@ -30,21 +30,17 @@ struct SmallSetFlipScratchSpace
 
     "Current syndrome"
     syndrome::Vector{Bool}
-
-    "Scratch buffer for syndrome delta when evaluating a candidate flip"
-    syn_delta::Vector{Bool}
 end
 
 function SmallSetFlipScratchSpace(s::Int, n::Int)
     return SmallSetFlipScratchSpace(
         zeros(Int, n),
-        zeros(Bool, s),
         zeros(Bool, s)
     )
 end
 
 """
-    SmallSetFlipDecoder(H, max_iters::Int; t::Int=0)
+    SmallSetFlipDecoder(H, max_iters::Int; t::Int=0, rng=nothing)
 
 Small-Set Flip decoder for quantum LDPC codes (especially hypergraph product
 and expander codes).
@@ -62,6 +58,11 @@ with practical parameters from Grospellier & Krishna (2019) [arXiv:1810.03681].
 - `max_iters::Int`: Maximum number of greedy flip iterations.
 - `t::Int`: Maximum subset size for flip sets (default `0` = use full
   stabilizer support, i.e. all subsets up to the stabilizer weight).
+- `rng`: Optional random number generator (e.g. `StableRNG(42)`) for
+  randomized tie-breaking. When `nothing` (default), ties are broken
+  deterministically by iteration order (first-found). When provided,
+  ties are broken by selecting uniformly at random among all candidates
+  with equal maximum syndrome weight reduction.
 """
 struct SmallSetFlipDecoder <: AbstractDecoder
     "Maximum number of greedy flip iterations"
@@ -82,14 +83,17 @@ struct SmallSetFlipDecoder <: AbstractDecoder
     "Pre-computed small sets: small_sets[i] is a vector of subsets of supp(row i)"
     small_sets::Vector{Vector{Vector{Int}}}
 
-    "Pre-computed syndrome columns: syn_columns[i][k] = H[:, small_sets[i][k]] XORed"
-    syn_columns::Vector{Vector{Vector{Bool}}}
+    "Pre-computed syndrome nonzero indices: syn_nonzeros[i][k] = row indices where XOR of H columns for small_sets[i][k] is nonzero"
+    syn_nonzeros::Vector{Vector{Vector{Int}}}
+
+    "Optional RNG for randomized tie-breaking (nothing = deterministic)"
+    rng::Union{Nothing, AbstractRNG}
 
     "Scratch space for computations"
     scratch::SmallSetFlipScratchSpace
 end
 
-function SmallSetFlipDecoder(H::Union{SparseMatrixCSC{Bool,Int}, BitMatrix}, max_iters::Int; t::Int=0)
+function SmallSetFlipDecoder(H::Union{SparseMatrixCSC{Bool,Int}, BitMatrix}, max_iters::Int; t::Int=0, rng::Union{Nothing, AbstractRNG}=nothing)
     s, n = size(H)
     sparse_H = sparse(H)
 
@@ -110,7 +114,7 @@ function SmallSetFlipDecoder(H::Union{SparseMatrixCSC{Bool,Int}, BitMatrix}, max
     # Determine effective max subset size per stabilizer
     # t=0 means "use full support weight"
     small_sets = Vector{Vector{Vector{Int}}}(undef, s)
-    syn_columns = Vector{Vector{Vector{Bool}}}(undef, s)
+    syn_nonzeros = Vector{Vector{Vector{Int}}}(undef, s)
 
     for i in 1:s
         supp = row_supports[i]
@@ -126,8 +130,9 @@ function SmallSetFlipDecoder(H::Union{SparseMatrixCSC{Bool,Int}, BitMatrix}, max
         end
         small_sets[i] = sets
 
-        # Pre-compute the syndrome contribution (XOR of H columns) for each set
-        set_syns = Vector{Bool}[]
+        # Pre-compute sparse syndrome contribution for each set:
+        # store only the row indices where the XOR of H columns is nonzero
+        set_nz = Vector{Int}[]
         for F in sets
             syn_F = zeros(Bool, s)
             for j in F
@@ -138,14 +143,21 @@ function SmallSetFlipDecoder(H::Union{SparseMatrixCSC{Bool,Int}, BitMatrix}, max
                     end
                 end
             end
-            push!(set_syns, syn_F)
+            # Extract nonzero indices
+            nz = Int[]
+            for r in 1:s
+                if syn_F[r]
+                    push!(nz, r)
+                end
+            end
+            push!(set_nz, nz)
         end
-        syn_columns[i] = set_syns
+        syn_nonzeros[i] = set_nz
     end
 
     scratch = SmallSetFlipScratchSpace(s, n)
 
-    return SmallSetFlipDecoder(max_iters, s, n, t == 0 ? -1 : t, sparse_H, small_sets, syn_columns, scratch)
+    return SmallSetFlipDecoder(max_iters, s, n, t == 0 ? -1 : t, sparse_H, small_sets, syn_nonzeros, rng, scratch)
 end
 
 """
@@ -164,7 +176,6 @@ function reset!(decoder::SmallSetFlipDecoder)
     scratch = decoder.scratch
     fill!(scratch.err, 0)
     fill!(scratch.syndrome, false)
-    fill!(scratch.syn_delta, false)
     return decoder
 end
 
@@ -200,7 +211,7 @@ function decode!(decoder::SmallSetFlipDecoder, syndrome::AbstractVector)
     state = decoder.scratch
 
     # Copy syndrome into working buffer
-    for i in 1:decoder.s
+    @inbounds for i in 1:decoder.s
         state.syndrome[i] = !iszero(syndrome[i])
     end
 
@@ -215,35 +226,36 @@ function decode!(decoder::SmallSetFlipDecoder, syndrome::AbstractVector)
         best_stab = 0
         best_set_idx = 0
 
+        # For randomized tie-breaking, collect all tied candidates
+        tied_candidates = decoder.rng !== nothing ? Tuple{Int,Int}[] : nothing
+
         # Search over all small sets for the best flip
         for i in 1:decoder.s
             sets = decoder.small_sets[i]
-            set_syns = decoder.syn_columns[i]
+            set_nzs = decoder.syn_nonzeros[i]
 
             for k in eachindex(sets)
-                # Compute syndrome weight after flipping set k of stabilizer i
-                # new_syndrome = syndrome ⊻ syn_columns[i][k]
-                # new_weight = count(new_syndrome)
-                # reduction = syn_weight - new_weight
-                #
-                # Equivalently: reduction = 2 * (number of bits in syn_columns[i][k]
-                # that are currently 1 in syndrome) - |syn_columns[i][k]|
-                # This avoids allocating/computing the full new syndrome.
-                syn_F = set_syns[k]
+                # Compute syndrome weight reduction using only nonzero indices.
+                # For each nonzero position r in the syndrome delta:
+                #   If syndrome[r] is 1 → flipping makes it 0 → reduction +1
+                #   If syndrome[r] is 0 → flipping makes it 1 → reduction -1
+                nz = set_nzs[k]
                 reduction = 0
-                @inbounds for r in 1:decoder.s
-                    if syn_F[r]
-                        # This bit of syndrome will be flipped.
-                        # If currently 1 → becomes 0 → net -1 (good)
-                        # If currently 0 → becomes 1 → net +1 (bad)
-                        reduction += state.syndrome[r] ? 1 : -1
-                    end
+                @inbounds for r in nz
+                    reduction += state.syndrome[r] ? 1 : -1
                 end
 
                 if reduction > best_reduction
                     best_reduction = reduction
                     best_stab = i
                     best_set_idx = k
+                    # Reset tied candidates for new best
+                    if tied_candidates !== nothing
+                        empty!(tied_candidates)
+                        push!(tied_candidates, (i, k))
+                    end
+                elseif reduction == best_reduction && reduction > 0 && tied_candidates !== nothing
+                    push!(tied_candidates, (i, k))
                 end
             end
         end
@@ -253,20 +265,23 @@ function decode!(decoder::SmallSetFlipDecoder, syndrome::AbstractVector)
             break
         end
 
+        # If randomized tie-breaking, select uniformly among tied candidates
+        if tied_candidates !== nothing && length(tied_candidates) > 1
+            best_stab, best_set_idx = tied_candidates[rand(decoder.rng, 1:length(tied_candidates))]
+        end
+
         # Apply the best flip
         best_F = decoder.small_sets[best_stab][best_set_idx]
-        best_syn_F = decoder.syn_columns[best_stab][best_set_idx]
+        best_nz = decoder.syn_nonzeros[best_stab][best_set_idx]
 
         # Flip error bits
         @inbounds for j in best_F
             state.err[j] = state.err[j] ⊻ 1
         end
 
-        # Update syndrome
-        @inbounds for r in 1:decoder.s
-            if best_syn_F[r]
-                state.syndrome[r] = !state.syndrome[r]
-            end
+        # Update syndrome — only at nonzero positions (sparse update)
+        @inbounds for r in best_nz
+            state.syndrome[r] = !state.syndrome[r]
         end
 
         syn_weight -= best_reduction
