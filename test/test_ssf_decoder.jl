@@ -4,7 +4,7 @@ using Test
 using SparseArrays
 using Random
 using StableRNGs
-import LDPCDecoders: SmallSetFlipDecoder, decode!, reset!
+import LDPCDecoders: SmallSetFlipDecoder, decode!, reset!, batchdecode!
 
     # Utility: create a simple cycle parity check matrix
     function create_cycle_matrix(n::Int)
@@ -187,6 +187,73 @@ import LDPCDecoders: SmallSetFlipDecoder, decode!, reset!
 
         @test guess1_copy == guess2
         @test conv1 == conv2
+    end
+
+    # ── Commit 2: Batch decoding ──
+
+    @testset "Batch Decoding" begin
+        H = create_cycle_matrix(8)
+        decoder = SmallSetFlipDecoder(H, 50)
+
+        samples = 5
+        syndromes = hcat([begin
+            err = zeros(Int, 8)
+            err[rand(1:8)] = 1
+            Bool.(mod.(H * err, 2))
+        end for _ in 1:samples]...)
+        errors_buf = zeros(Int, size(H, 2), samples)
+
+        guesses, successes = batchdecode!(decoder, syndromes, errors_buf)
+
+        for i in 1:samples
+            decoded_syndrome = Bool.(mod.(H * guesses[:, i], 2))
+            @test decoded_syndrome == syndromes[:, i]
+        end
+        @test all(successes)
+    end
+
+    @testset "Batch Decoding with pre-allocated converged vector" begin
+        H = LDPCDecoders.parity_check_matrix(100, 5, 4)
+        decoder = SmallSetFlipDecoder(H, 100)
+
+        rng = StableRNG(99)
+        samples = 10
+        errors_in = rand(rng, 100, samples) .< 0.02
+        syndromes = Bool.((H * errors_in) .% 2)
+        errors_buf = zeros(Int, 100, samples)
+        converged = Vector{Bool}(undef, samples)
+
+        guesses, conv = batchdecode!(decoder, syndromes, errors_buf, converged)
+
+        # converged must be the same object we passed in
+        @test conv === converged
+
+        for i in 1:samples
+            decoded_syndrome = Bool.(mod.(H * guesses[:, i], 2))
+            @test decoded_syndrome == syndromes[:, i]
+        end
+    end
+
+    @testset "Batch Decoding without pre-allocated converged" begin
+        H = create_cycle_matrix(8)
+        decoder = SmallSetFlipDecoder(H, 50)
+
+        samples = 3
+        syndromes = hcat([begin
+            err = zeros(Int, 8)
+            err[1] = 1
+            Bool.(mod.(H * err, 2))
+        end for _ in 1:samples]...)
+        errors_buf = zeros(Int, 8, samples)
+
+        # 3-arg form (no converged vector) — should allocate one internally
+        guesses, successes = batchdecode!(decoder, syndromes, errors_buf)
+
+        @test length(successes) == samples
+        for i in 1:samples
+            decoded_syndrome = Bool.(mod.(H * guesses[:, i], 2))
+            @test decoded_syndrome == syndromes[:, i]
+        end
     end
 
 end

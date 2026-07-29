@@ -293,3 +293,44 @@ function decode!(decoder::SmallSetFlipDecoder, syndrome::AbstractVector)
 
     return state.err, false
 end
+
+"""
+    batchdecode!(decoder::SmallSetFlipDecoder, syndromes::AbstractMatrix, errors::AbstractMatrix, converged::AbstractVector{Bool})
+    batchdecode!(decoder::SmallSetFlipDecoder, syndromes::AbstractMatrix, errors::AbstractMatrix)
+
+Decode each column of `syndromes` with the SSF decoder, writing the results into
+the corresponding column of `errors`.
+
+Returns `(errors, converged)`. The `converged[i]` is `true` if the decoder found
+an error estimate whose syndrome matches `syndromes[:, i]` within the iteration
+limit, and `false` otherwise.
+
+# Examples
+```jldoctest
+julia> using StableRNGs; rng = StableRNG(42);
+
+julia> H = LDPCDecoders.parity_check_matrix(100, 5, 4);
+
+julia> decoder = SmallSetFlipDecoder(H, 50);
+
+julia> samples = 5;
+
+julia> errors = rand(rng, 100, samples) .< 0.02;
+
+julia> syndromes = Bool.((H * errors) .% 2);
+
+julia> guesses, successes = batchdecode!(decoder, syndromes, zero(errors));
+```
+"""
+function batchdecode!(decoder::SmallSetFlipDecoder, syndromes::AbstractMatrix, errors::AbstractMatrix, converged::AbstractVector{Bool})
+    @assert size(syndromes, 2) == size(errors, 2)
+    @assert size(syndromes, 2) == length(converged)
+
+    @views for i in axes(syndromes, 2)
+        guess, conv = decode!(decoder, syndromes[:, i])
+        converged[i] = conv
+        errors[:, i] .= guess
+    end
+
+    return errors, converged
+end
