@@ -1,6 +1,6 @@
 using SparseArrays
 
-# Generate all k-element combinations of `items` without external dependencies.
+# basically,this helps generates all k-element combinations of `items`.
 # Returns a Vector{Vector{T}}.
 function _combinations(items::Vector{T}, k::Int) where {T}
     result = Vector{T}[]
@@ -23,6 +23,8 @@ function _combinations(items::Vector{T}, k::Int) where {T}
     end
     return result
 end
+
+
 # SCRATCH SPACE FOR SSF COMPUTATIONS
 struct SmallSetFlipScratchSpace
     "Current error estimate"
@@ -42,27 +44,24 @@ end
 """
     SmallSetFlipDecoder(H, max_iters::Int; t::Int=0, rng=nothing)
 
-Small-Set Flip decoder for quantum LDPC codes (especially hypergraph product
-and expander codes).
+Small-Set Flip decoder for quantum LDPC codes, particularly hypergraph
+product and expander codes.
 
-Generalizes the classical bit-flip decoder by flipping *sets* of qubits within
-the support of a stabilizer, rather than individual bits. At each iteration the
-algorithm greedily selects the flip set that maximally reduces the syndrome
-weight.
+Like the classical bit-flip decoder, but flips *sets* of qubits within a
+stabilizer's support instead of one qubit at a time. Each iteration picks
+whichever flip set cuts the syndrome weight down the most.
 
-Based on Algorithm 2 of Leverrier, Tillich & Zémor (2015) [arXiv:1504.00822],
-with practical parameters from Grospellier & Krishna (2019) [arXiv:1810.03681].
+Follows Algorithm 2 in Leverrier, Tillich & Zémor (2015) [arXiv:1504.00822];
+parameter choices are from Grospellier & Krishna (2019) [arXiv:1810.03681].
 
 # Arguments
 - `H`: Parity check matrix (`BitMatrix` or `SparseMatrixCSC{Bool,Int}`).
 - `max_iters::Int`: Maximum number of greedy flip iterations.
-- `t::Int`: Maximum subset size for flip sets (default `0` = use full
-  stabilizer support, i.e. all subsets up to the stabilizer weight).
-- `rng`: Optional random number generator (e.g. `StableRNG(42)`) for
-  randomized tie-breaking. When `nothing` (default), ties are broken
-  deterministically by iteration order (first-found). When provided,
-  ties are broken by selecting uniformly at random among all candidates
-  with equal maximum syndrome weight reduction.
+- `t::Int`: Cap on flip-set size. `0` (default) means no cap — try all
+  subsets up to the stabilizer weight.
+- `rng`: Optional RNG (e.g. `StableRNG(42)`) for tie-breaking. With
+  `nothing` (default), ties go to whichever candidate is found first.
+  Pass an RNG to break ties uniformly at random instead.
 """
 struct SmallSetFlipDecoder <: AbstractDecoder
     "Maximum number of greedy flip iterations"
@@ -96,7 +95,6 @@ end
 function SmallSetFlipDecoder(H::Union{SparseMatrixCSC{Bool,Int}, BitMatrix}, max_iters::Int; t::Int=0, rng::Union{Nothing, AbstractRNG}=nothing)
     s, n = size(H)
     sparse_H = sparse(H)
-
     # Build the support (list of nonzero column indices) for each row of H
     sparse_HT = sparse(H')
     row_supports = Vector{Vector{Int}}(undef, s)
@@ -115,12 +113,10 @@ function SmallSetFlipDecoder(H::Union{SparseMatrixCSC{Bool,Int}, BitMatrix}, max
     # t=0 means "use full support weight"
     small_sets = Vector{Vector{Vector{Int}}}(undef, s)
     syn_nonzeros = Vector{Vector{Vector{Int}}}(undef, s)
-
     for i in 1:s
         supp = row_supports[i]
         w = length(supp)
         max_size = t == 0 ? w : min(t, w)
-
         # Enumerate all subsets of supp with size 1..max_size
         sets = Vector{Int}[]
         for k in 1:max_size
@@ -129,7 +125,6 @@ function SmallSetFlipDecoder(H::Union{SparseMatrixCSC{Bool,Int}, BitMatrix}, max
             end
         end
         small_sets[i] = sets
-
         # Pre-compute sparse syndrome contribution for each set:
         # store only the row indices where the XOR of H columns is nonzero
         set_nz = Vector{Int}[]
@@ -154,9 +149,7 @@ function SmallSetFlipDecoder(H::Union{SparseMatrixCSC{Bool,Int}, BitMatrix}, max
         end
         syn_nonzeros[i] = set_nz
     end
-
     scratch = SmallSetFlipScratchSpace(s, n)
-
     return SmallSetFlipDecoder(max_iters, s, n, t == 0 ? -1 : t, sparse_H, small_sets, syn_nonzeros, rng, scratch)
 end
 
@@ -182,13 +175,13 @@ end
 """
     decode!(decoder::SmallSetFlipDecoder, syndrome::AbstractVector)
 
-Decode `syndrome` using the Small-Set Flip algorithm.
+Decode `syndrome` with the Small-Set Flip algorithm.
 
-At each iteration, the algorithm searches over all pre-computed small sets
-(subsets of each stabilizer's support) and greedily applies the flip that
-maximally reduces the syndrome weight.
+Each iteration checks the pre-computed small sets (subsets of each
+stabilizer's support) and applies whichever flip brings the syndrome
+weight down the most.
 
-Returns `(error_estimate, converged)` where `converged` is `true` if the
+Returns `(error_estimate, converged)`, where `converged` is `true` if the
 syndrome was fully resolved.
 
 # Examples
@@ -209,31 +202,25 @@ julia> guess, success = decode!(decoder, syndrome);
 function decode!(decoder::SmallSetFlipDecoder, syndrome::AbstractVector)
     reset!(decoder)
     state = decoder.scratch
-
     # Copy syndrome into working buffer
     @inbounds for i in 1:decoder.s
         state.syndrome[i] = !iszero(syndrome[i])
     end
-
     # Check if syndrome is already zero
     syn_weight = count(state.syndrome)
     if syn_weight == 0
         return state.err, true
     end
-
     for _iter in 1:decoder.max_iters
         best_reduction = 0
         best_stab = 0
         best_set_idx = 0
-
-        # For randomized tie-breaking, collect all tied candidates
+        # For randomized tie-breaking, collecting all tied candidates
         tied_candidates = decoder.rng !== nothing ? Tuple{Int,Int}[] : nothing
-
-        # Search over all small sets for the best flip
+        # Searching over all small sets for the best flip
         for i in 1:decoder.s
             sets = decoder.small_sets[i]
             set_nzs = decoder.syn_nonzeros[i]
-
             for k in eachindex(sets)
                 # Compute syndrome weight reduction using only nonzero indices.
                 # For each nonzero position r in the syndrome delta:
@@ -244,7 +231,6 @@ function decode!(decoder::SmallSetFlipDecoder, syndrome::AbstractVector)
                 @inbounds for r in nz
                     reduction += state.syndrome[r] ? 1 : -1
                 end
-
                 if reduction > best_reduction
                     best_reduction = reduction
                     best_stab = i
@@ -260,39 +246,32 @@ function decode!(decoder::SmallSetFlipDecoder, syndrome::AbstractVector)
             end
         end
 
-        # No improvement found — terminate
+        # if no improvement found ,terminate
         if best_reduction <= 0
             break
         end
-
-        # If randomized tie-breaking, select uniformly among tied candidates
+        # if randomized tie-breaking, select uniformly among tied candidates
         if tied_candidates !== nothing && length(tied_candidates) > 1
             rng = decoder.rng::AbstractRNG  # type-assert for JET (avoids rand(::Nothing, ...) union split)
             idx = 1 + floor(Int, rand(rng) * length(tied_candidates))
             best_stab, best_set_idx = tied_candidates[idx]
         end
-
         # Apply the best flip
         best_F = decoder.small_sets[best_stab][best_set_idx]
         best_nz = decoder.syn_nonzeros[best_stab][best_set_idx]
-
         # Flip error bits
         @inbounds for j in best_F
             state.err[j] = state.err[j] ⊻ 1
         end
-
         # Update syndrome — only at nonzero positions (sparse update)
         @inbounds for r in best_nz
             state.syndrome[r] = !state.syndrome[r]
         end
-
         syn_weight -= best_reduction
-
         if syn_weight == 0
             return state.err, true
         end
     end
-
     return state.err, false
 end
 
@@ -300,12 +279,12 @@ end
     batchdecode!(decoder::SmallSetFlipDecoder, syndromes::AbstractMatrix, errors::AbstractMatrix, converged::AbstractVector{Bool})
     batchdecode!(decoder::SmallSetFlipDecoder, syndromes::AbstractMatrix, errors::AbstractMatrix)
 
-Decode each column of `syndromes` with the SSF decoder, writing the results into
-the corresponding column of `errors`.
+Decode each column of `syndromes` with the SSF decoder, writing results into
+the matching column of `errors`.
 
-Returns `(errors, converged)`. The `converged[i]` is `true` if the decoder found
-an error estimate whose syndrome matches `syndromes[:, i]` within the iteration
-limit, and `false` otherwise.
+Returns `(errors, converged)`. `converged[i]` is `true` if the decoder found
+an error estimate whose syndrome matches `syndromes[:, i]` within the
+iteration limit, `false` otherwise.
 
 # Examples
 ```jldoctest
