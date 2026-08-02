@@ -268,7 +268,8 @@ function decode!(decoder::SmallSetFlipDecoder, syndrome::AbstractVector)
         # If randomized tie-breaking, select uniformly among tied candidates
         if tied_candidates !== nothing && length(tied_candidates) > 1
             rng = decoder.rng::AbstractRNG  # type-assert for JET (avoids rand(::Nothing, ...) union split)
-            best_stab, best_set_idx = rand(rng, tied_candidates)  # rand on Vector avoids UnitRange Sampler ambiguity with StableRNGs
+            idx = 1 + floor(Int, rand(rng) * length(tied_candidates))
+            best_stab, best_set_idx = tied_candidates[idx]
         end
 
         # Apply the best flip
