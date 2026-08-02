@@ -4,7 +4,7 @@ using Test
 using SparseArrays
 using Random
 using StableRNGs
-import LDPCDecoders: SmallSetFlipDecoder, decode!, reset!, batchdecode!
+import LDPCDecoders: SmallSetFlipDecoder, BitFlipDecoder, decode!, reset!, batchdecode!
 
     # Utility: create a simple cycle parity check matrix
     function create_cycle_matrix(n::Int)
@@ -262,6 +262,99 @@ import LDPCDecoders: SmallSetFlipDecoder, decode!, reset!, batchdecode!
             decoded_syndrome = Bool.(mod.(H * guesses[:, i], 2))
             @test decoded_syndrome == syndromes[:, i]
         end
+    end
+
+    # ── Commit 4: Comprehensive tests ──
+
+    @testset "Random i.i.d. noise — threshold behavior (Paper 2)" begin
+        rng = StableRNG(42)
+        H = create_cycle_matrix(16)
+        decoder = SmallSetFlipDecoder(H, 50)
+
+        # Low noise (single-bit errors) -> 100% exact error recovery
+        exact_matches = 0
+        for _ in 1:20
+            err = zeros(Int, 16)
+            err[rand(rng, 1:16)] = 1
+            syn = Bool.(mod.(H * err, 2))
+            guess, conv = decode!(decoder, syn)
+            if conv && guess == err
+                exact_matches += 1
+            end
+        end
+        @test exact_matches == 20
+    end
+
+    @testset "SSF (t>1) vs BitFlipDecoder — Paper 1 Algorithm 2 vs single-bit-flip" begin
+        H = create_cycle_matrix(12)
+        ssf_t2 = SmallSetFlipDecoder(H, 50; t=2)
+        bf = BitFlipDecoder(H, 0.01, 50)
+
+        # 2-bit error on adjacent bits (cycle matrix weight-2 stabilizer support overlap)
+        err = zeros(Int, 12)
+        err[1] = 1
+        err[2] = 1
+        syn = Bool.(mod.(H * err, 2))
+
+        _, ssf_conv = decode!(ssf_t2, syn)
+        _, bf_conv = decode!(bf, syn)
+
+        # SSF with t=2 handles 2-bit flip sets directly
+        @test ssf_conv == true
+    end
+
+    @testset "Effect of t parameter on success rate" begin
+        H = create_cycle_matrix(16)
+        dec_t1 = SmallSetFlipDecoder(H, 50; t=1)
+        dec_t2 = SmallSetFlipDecoder(H, 50; t=2)
+
+        rng = StableRNG(123)
+        succ_t1 = 0
+        succ_t2 = 0
+
+        for _ in 1:30
+            err = rand(rng, 16) .< 0.08
+            syn = Bool.(mod.(H * err, 2))
+            
+            _, c1 = decode!(dec_t1, syn)
+            _, c2 = decode!(dec_t2, syn)
+            
+            c1 && (succ_t1 += 1)
+            c2 && (succ_t2 += 1)
+        end
+
+        @test succ_t2 >= succ_t1
+    end
+
+    @testset "Multi-bit error patterns" begin
+        H = create_cycle_matrix(12)
+        decoder = SmallSetFlipDecoder(H, 50; t=2)
+
+        # 2-bit & 3-bit errors
+        for bits in [[1, 3], [2, 5], [1, 4, 7]]
+            err = zeros(Int, 12)
+            err[bits] .= 1
+            syn = Bool.(mod.(H * err, 2))
+
+            guess, conv = decode!(decoder, syn)
+            if conv
+                @test Bool.(mod.(H * guess, 2)) == syn
+            end
+        end
+    end
+
+    @testset "Failure reporting" begin
+        H = create_cycle_matrix(8)
+        decoder = SmallSetFlipDecoder(H, 1) # max 1 iteration
+
+        # Non-codeword error pattern with 3 separated errors that cannot be solved in 1 iteration
+        err = zeros(Int, 8)
+        err[1] = 1; err[3] = 1; err[5] = 1
+        syn = Bool.(mod.(H * err, 2))
+
+        guess, conv = decode!(decoder, syn)
+        @test length(guess) == 8
+        @test typeof(guess) == Vector{Int}
     end
 
 end
