@@ -267,15 +267,14 @@ import LDPCDecoders: SmallSetFlipDecoder, BitFlipDecoder, decode!, reset!, batch
     # ── Commit 4: Comprehensive tests ──
 
     @testset "Random i.i.d. noise — threshold behavior (Paper 2)" begin
-        rng = StableRNG(42)
         H = create_cycle_matrix(16)
         decoder = SmallSetFlipDecoder(H, 50)
 
         # Low noise (single-bit errors) -> 100% exact error recovery
         exact_matches = 0
-        for _ in 1:20
+        for i in 1:20
             err = zeros(Int, 16)
-            err[rand(rng, 1:16)] = 1
+            err[mod(i - 1, 16) + 1] = 1
             syn = Bool.(mod.(H * err, 2))
             guess, conv = decode!(decoder, syn)
             if conv && guess == err
