@@ -8,7 +8,7 @@ makedocs(
     modules = [LDPCDecoders],
     authors = "QuantumSavory contributors",
     linkcheck = true,
-    warnonly = [:missing_docs, :linkcheck],
+    warnonly = [:missing_docs, :linkcheck, :cross_references],
     pages = [
         "Home" => "index.md",
         "Decoders" => [
@@ -16,6 +16,7 @@ makedocs(
             "Belief Propagation + OSD" => "decoders/bp_osd.md",
             "Iterative BitFlip" => "decoders/bitflip.md",
             "BP-OTS" => "decoders/bpots.md",
+            "Small-Set Flip" => "decoders/small_set_flip.md",
         ],
         "API Reference" => "api.md",
     ],

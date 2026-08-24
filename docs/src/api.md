@@ -10,6 +10,8 @@ BeliefPropagationDecoder
 BeliefPropagationOSDDecoder
 BitFlipDecoder
 BPOTSDecoder
+SmallSetFlipDecoder
+CSSSmallSetFlipDecoder
 ```
 
 ## Functions
@@ -26,5 +28,7 @@ These are not exported but may be useful for advanced usage.
 ```@docs
 LDPCDecoders.reset!(::BeliefPropagationDecoder)
 LDPCDecoders.reset!(::BitFlipDecoder)
+LDPCDecoders.reset!(::SmallSetFlipDecoder)
+LDPCDecoders.reset!(::CSSSmallSetFlipDecoder)
 LDPCDecoders.parity_check_matrix
 ```
