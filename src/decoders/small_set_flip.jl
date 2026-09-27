@@ -1,29 +1,5 @@
 using SparseArrays
 
-# basically,this helps generates all k-element combinations of `items`.
-# Returns a Vector{Vector{T}}.
-function _combinations(items::Vector{T}, k::Int) where {T}
-    result = Vector{T}[]
-    n = length(items)
-    k > n && return result
-    k == 0 && return [T[]]
-    indices = collect(1:k)
-    while true
-        push!(result, items[indices])
-        # Advance to next combination
-        i = k
-        while i > 0 && indices[i] == n - k + i
-            i -= 1
-        end
-        i == 0 && break
-        indices[i] += 1
-        for j in i+1:k
-            indices[j] = indices[j-1] + 1
-        end
-    end
-    return result
-end
-
 
 # SCRATCH SPACE FOR SSF COMPUTATIONS
 struct SmallSetFlipScratchSpace
@@ -120,7 +96,7 @@ function SmallSetFlipDecoder(H::Union{SparseMatrixCSC{Bool,Int}, BitMatrix}, max
         # Enumerate all subsets of supp with size 1..max_size
         sets = Vector{Int}[]
         for k in 1:max_size
-            for combo in _combinations(supp, k)
+            for combo in combinations(supp, k)
                 push!(sets, combo)
             end
         end

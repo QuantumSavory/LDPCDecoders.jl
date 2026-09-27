@@ -1,5 +1,6 @@
 module LDPCDecoders
 
+using Combinatorics: combinations
 using DelimitedFiles
 using LinearAlgebra
 using Random
