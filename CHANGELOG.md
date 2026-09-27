@@ -20,6 +20,14 @@
 - Remove 10 deprecated/legacy decoder files (superseded by modern API) and old examples
 - Finalize legacy cleanup by completely removing unused syndrome decoders and generator
 - Replace `Dict{Tuple{Int,Int}, Float64}` message storage in BP-OTS with dense `Matrix{Float64}` for zero-hashing message passing
+- Add Small-Set Flip (SSF) decoder for quantum LDPC codes (Leverrier, Tillich & Zémor, arXiv:1504.00822)
+  - Sparse O(|nz|) candidate syndrome evaluation with precomputed non-zero indices
+  - Configurable subset bound parameter `t` and optional randomized tie-breaking via `rng` kwarg
+  - `CSSSmallSetFlipDecoder` wrapper for independent X/Z error decoding on CSS codes
+  - Explicit `batchdecode!` for both SSF and CSS-SSF decoders
+  - QuantumClifford.ECC integration tests (Toric, Steane [[7,1,3]], HGP codes)
+  - AirspeedVelocity benchmarks with parameterized t-sweep and CSS decoder benchmarks
+  - Documentation page with algorithm overview, theoretical background, and parameter guide
 
 ## v0.3.3 - 2025-04-15
 
